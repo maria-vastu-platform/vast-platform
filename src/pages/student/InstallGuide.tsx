@@ -13,14 +13,14 @@ export default function InstallGuide() {
             </Link>
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="bg-vastu-dark p-8 md:p-10 text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-vastu-accent opacity-10 rounded-full blur-[80px] translate-x-1/3 -translate-y-1/3" />
+                <div className="bg-vastu-accent p-8 md:p-10 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-vastu-dark opacity-5 rounded-full blur-[80px] translate-x-1/3 -translate-y-1/3" />
                     <div className="relative z-10">
-                        <h1 className="text-3xl md:text-4xl font-serif mb-2 flex items-center gap-3">
+                        <h1 className="text-3xl md:text-4xl font-serif mb-2 flex items-center gap-3 text-vastu-dark">
                             <Smartphone size={28} />
                             App installieren
                         </h1>
-                        <p className="text-white/60 font-light">So fügst du die Plattform als App auf deinem Startbildschirm hinzu</p>
+                        <p className="text-vastu-dark/50 font-light">So fügst du die Plattform als App auf deinem Startbildschirm hinzu</p>
                     </div>
                 </div>
 

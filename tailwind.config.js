@@ -8,10 +8,10 @@ export default {
         extend: {
             colors: {
                 vastu: {
-                    dark: '#7a604a',       // Warm earthy brown (primary)
-                    'dark-deep': '#5a4035', // Deep brown for gradients
-                    accent: '#c4b7b3',     // Soft mauve/warm grey
-                    gold: '#d4a574',        // Warm gold accent
+                    dark: '#7a604a',       // Original warm brown
+                    'dark-deep': '#5a4035', // Deeper brown for hover/hero
+                    accent: '#c4b7b3',     // Main accent for UI (sidebar, headers)
+                    gold: '#d4b896',        // Warm gold for hero accents
                     light: '#faf8f6',      // Warm off-white
                     cream: '#f3eeea',      // Slightly darker cream for cards
                     sand: '#e8ddd4',       // Warm sand for borders
@@ -20,14 +20,14 @@ export default {
                 }
             },
             fontFamily: {
-                serif: ['"Playfair Display"', 'serif'],
-                body: ['"Cormorant"', 'serif'],
-                script: ['"Great Vibes"', 'cursive'],
-                sans: ['"Inter"', 'sans-serif'],
+                serif: ['"Playfair Display"', 'Georgia', 'serif'],
+                sans: ['"Inter"', 'system-ui', 'sans-serif'],
+                body: ['"Source Sans 3"', 'sans-serif'],
+                script: ['"Dancing Script"', 'cursive'],
             },
             backgroundImage: {
                 'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-                'sidebar-gradient': 'linear-gradient(180deg, #7a604a 0%, #5a4035 100%)',
+                'sidebar-gradient': 'linear-gradient(180deg, #c4b7b3 0%, #b0a5a1 100%)',
             },
             keyframes: {
                 fadeIn: {

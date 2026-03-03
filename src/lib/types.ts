@@ -87,3 +87,12 @@ export interface Review {
     review_url: string;
     created_at: string;
 }
+
+export interface Kohorte {
+    id: string;
+    name: string;
+    startDate: string;
+    description?: string;
+    color?: string;
+    created_at?: string;
+}

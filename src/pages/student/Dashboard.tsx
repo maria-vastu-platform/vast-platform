@@ -75,23 +75,23 @@ export default function StudentDashboard() {
         <div className="animate-fade-in">
             <div className="bg-white rounded-xl md:rounded-2xl shadow-sm border border-vastu-sand/50 overflow-hidden min-h-[calc(100vh-5rem)]">
                 {/* Module Header — grain texture + decorative module number */}
-                <div className="bg-vastu-dark grain-overlay p-6 md:p-8 text-white relative overflow-hidden">
+                <div className="bg-vastu-accent grain-overlay p-6 md:p-8 relative overflow-hidden">
                     {/* Decorative module number background */}
                     <div className="module-number-bg">{moduleNum}</div>
 
                     {/* Blur orb */}
-                    <div className="absolute top-0 right-0 w-80 h-80 bg-vastu-gold opacity-8 rounded-full blur-[100px] translate-x-1/3 -translate-y-1/3" />
+                    <div className="absolute top-0 right-0 w-80 h-80 bg-vastu-dark opacity-5 rounded-full blur-[100px] translate-x-1/3 -translate-y-1/3" />
 
                     <div className="relative z-10">
                         {/* Module label pill */}
                         {activeMod.id !== 'pre' && activeMod.id !== 'bonus' && (
-                            <span className="inline-block px-3 py-1 bg-vastu-gold/15 text-vastu-gold text-xs font-sans font-medium rounded-full mb-3 tracking-wide uppercase">
+                            <span className="inline-block px-3 py-1 bg-vastu-dark/15 text-vastu-dark text-xs font-sans font-medium rounded-full mb-3 tracking-wide uppercase">
                                 Modul {moduleNum}
                             </span>
                         )}
 
-                        <h2 className="text-2xl md:text-4xl font-serif mb-3">{activeMod.title}</h2>
-                        <p className="text-white/50 max-w-2xl font-body leading-relaxed text-base mb-4">
+                        <h2 className="text-2xl md:text-4xl font-serif mb-3 text-vastu-dark">{activeMod.title}</h2>
+                        <p className="text-vastu-dark/50 max-w-2xl font-body leading-relaxed text-base mb-4">
                             {stripHtml(activeMod.description || '')}
                         </p>
 

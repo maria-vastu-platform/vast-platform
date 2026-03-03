@@ -23,6 +23,7 @@ export default function TeacherLayout() {
     const navItems = [
         { path: '/teacher', label: 'Kurs', icon: Layout },
         { path: '/teacher/students', label: 'Teilnehmer', icon: Users },
+        { path: '/teacher/kohorten', label: 'Kohorten', icon: Users },
         { path: '/teacher/library', label: 'Bibliothek', icon: FileText },
     ];
 
@@ -33,12 +34,12 @@ export default function TeacherLayout() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Desktop Sidebar — hidden on mobile */}
-            <aside className="hidden md:flex w-64 bg-vastu-dark text-vastu-light flex-col fixed h-full z-20">
-                <div className="p-6 border-b border-white/10">
+            {/* Desktop Sidebar — light mauve c4b7b3 with dark text */}
+            <aside className="hidden md:flex w-64 bg-sidebar-gradient flex-col fixed h-full z-20">
+                <div className="p-6 border-b border-vastu-dark/10">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-vastu-accent rounded-full flex items-center justify-center text-vastu-dark font-serif font-bold text-lg">V</div>
-                        <span className="font-serif text-xl tracking-wide text-vastu-accent">ADMIN</span>
+                        <img src="/logo.png" alt="Academy" className="w-8 h-8 object-contain" />
+                        <span className="font-serif text-xl tracking-wide text-vastu-dark">ADMIN</span>
                     </div>
                 </div>
 
@@ -50,8 +51,8 @@ export default function TeacherLayout() {
                             className={cn(
                                 "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
                                 location.pathname === item.path
-                                    ? "bg-vastu-accent text-vastu-dark"
-                                    : "text-vastu-light/70 hover:text-vastu-light hover:bg-white/5"
+                                    ? "bg-white/40 text-vastu-dark font-semibold"
+                                    : "text-vastu-dark/80 hover:text-vastu-dark hover:bg-white/20"
                             )}
                         >
                             <item.icon size={18} />
@@ -60,10 +61,10 @@ export default function TeacherLayout() {
                     ))}
                 </nav>
 
-                <div className="p-4 border-t border-white/10">
+                <div className="p-4 border-t border-vastu-dark/10">
                     <button
                         onClick={handleSignOut}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-vastu-light/70 hover:text-vastu-light hover:bg-white/5 transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-vastu-dark/70 hover:text-vastu-dark hover:bg-white/20 transition-colors"
                     >
                         <LogOut size={18} />
                         Abmelden
@@ -72,13 +73,13 @@ export default function TeacherLayout() {
             </aside>
 
             {/* Mobile Header */}
-            <header className="md:hidden bg-vastu-dark text-white fixed top-0 w-full z-50 shadow-md h-14 flex items-center justify-between px-4">
+            <header className="md:hidden bg-sidebar-gradient fixed top-0 w-full z-50 shadow-md h-14 flex items-center justify-between px-4">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-vastu-accent rounded-full flex items-center justify-center text-vastu-dark font-serif font-bold text-base">V</div>
-                    <span className="font-serif text-lg tracking-wide text-vastu-accent">ADMIN</span>
+                    <img src="/logo.png" alt="Academy" className="w-8 h-8 object-contain" />
+                    <span className="font-serif text-lg tracking-wide text-vastu-dark">ADMIN</span>
                 </div>
                 <button
-                    className="text-vastu-accent p-1"
+                    className="text-vastu-dark p-1"
                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 >
                     {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -88,7 +89,7 @@ export default function TeacherLayout() {
             {/* Mobile Menu Overlay */}
             {isMobileMenuOpen && (
                 <div className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
-                    <div className="bg-vastu-dark w-64 h-full shadow-2xl p-4 pt-18 overflow-y-auto" onClick={e => e.stopPropagation()}>
+                    <div className="bg-sidebar-gradient w-64 h-full shadow-2xl p-4 pt-18 overflow-y-auto" onClick={e => e.stopPropagation()}>
                         <nav className="space-y-2 mt-14">
                             {navItems.map((item) => (
                                 <Link
@@ -98,8 +99,8 @@ export default function TeacherLayout() {
                                     className={cn(
                                         "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
                                         location.pathname === item.path
-                                            ? "bg-vastu-accent text-vastu-dark"
-                                            : "text-vastu-light/70 hover:text-vastu-light hover:bg-white/5"
+                                            ? "bg-white/40 text-vastu-dark font-semibold"
+                                            : "text-vastu-dark/60 hover:text-vastu-dark hover:bg-white/20"
                                     )}
                                 >
                                     <item.icon size={18} />
@@ -108,11 +109,11 @@ export default function TeacherLayout() {
                             ))}
                         </nav>
 
-                        <div className="mt-6 pt-4 border-t border-white/10">
+                        <div className="mt-6 pt-4 border-t border-vastu-dark/10">
                             {isDemo && (
                                 <button
                                     onClick={() => { navigate('/login'); setIsMobileMenuOpen(false); }}
-                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-vastu-light/70 hover:text-vastu-light hover:bg-white/5 transition-colors mb-2"
+                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-vastu-dark/50 hover:text-vastu-dark hover:bg-white/20 transition-colors mb-2"
                                 >
                                     <Users size={18} />
                                     Rolle wechseln
@@ -120,7 +121,7 @@ export default function TeacherLayout() {
                             )}
                             <button
                                 onClick={handleSignOut}
-                                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-vastu-light/70 hover:text-vastu-light hover:bg-white/5 transition-colors"
+                                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-vastu-dark/70 hover:text-vastu-dark hover:bg-white/20 transition-colors"
                             >
                                 <LogOut size={18} />
                                 Abmelden

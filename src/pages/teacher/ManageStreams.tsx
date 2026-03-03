@@ -125,10 +125,10 @@ export default function ManageStreams() {
     return (
         <div className="max-w-4xl mx-auto">
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-serif text-[#422326]">Управление Эфирами</h1>
+                <h1 className="text-3xl font-serif text-vastu-dark">Управление Эфирами</h1>
                 <button
                     onClick={handleAddNew}
-                    className="flex items-center px-4 py-2 bg-[#422326] text-white rounded-lg hover:bg-[#2b1618] transition-colors"
+                    className="flex items-center px-4 py-2 bg-vastu-dark text-white rounded-lg hover:bg-vastu-dark-deep transition-colors"
                 >
                     <Plus className="w-5 h-5 mr-2" />
                     Добавить Эфир
@@ -140,7 +140,7 @@ export default function ManageStreams() {
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-[#F4F2ED]">
-                            <h2 className="text-xl font-bold text-[#422326]">
+                            <h2 className="text-xl font-bold text-vastu-dark">
                                 {editingId ? 'Редактировать Эфир' : 'Новый Эфир'}
                             </h2>
                             <button onClick={() => setIsEditing(false)} className="text-gray-500 hover:text-red-500">
@@ -157,7 +157,7 @@ export default function ManageStreams() {
                                         required
                                         value={formData.title}
                                         onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                        className="w-full rounded-lg border-gray-300 focus:ring-[#422326] focus:border-[#422326]"
+                                        className="w-full rounded-lg border-gray-300 focus:ring-vastu-dark focus:border-vastu-dark"
                                         placeholder="Например: Эфир 1. Введение"
                                     />
                                 </div>
@@ -168,7 +168,7 @@ export default function ManageStreams() {
                                         required
                                         value={formData.date}
                                         onChange={e => setFormData({ ...formData, date: e.target.value })}
-                                        className="w-full rounded-lg border-gray-300 focus:ring-[#422326] focus:border-[#422326]"
+                                        className="w-full rounded-lg border-gray-300 focus:ring-vastu-dark focus:border-vastu-dark"
                                     />
                                 </div>
                             </div>
@@ -184,7 +184,7 @@ export default function ManageStreams() {
                                         required
                                         value={formData.video_url}
                                         onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-                                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#422326] focus:border-transparent outline-none transition-all"
+                                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-vastu-dark focus:border-transparent outline-none transition-all"
                                         placeholder="https://youtube.com/..."
                                     />
                                 </div>
@@ -200,7 +200,7 @@ export default function ManageStreams() {
                                         type="url"
                                         value={formData.rutube_url || ''}
                                         onChange={(e) => setFormData({ ...formData, rutube_url: e.target.value })}
-                                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#422326] focus:border-transparent outline-none transition-all"
+                                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-vastu-dark focus:border-transparent outline-none transition-all"
                                         placeholder="https://rutube.ru/..."
                                     />
                                 </div>
@@ -216,7 +216,7 @@ export default function ManageStreams() {
                                             name="audioUploadType"
                                             checked={!formData.audio_url?.startsWith('http')}
                                             onChange={() => setFormData({ ...formData, audio_url: '' })}
-                                            className="text-[#422326] focus:ring-[#422326]"
+                                            className="text-vastu-dark focus:ring-vastu-dark"
                                         />
                                         <span className="text-sm">Загрузить файл</span>
                                     </label>
@@ -226,7 +226,7 @@ export default function ManageStreams() {
                                             name="audioUploadType"
                                             checked={formData.audio_url?.startsWith('http') || false}
                                             onChange={() => setFormData({ ...formData, audio_url: 'https://' })}
-                                            className="text-[#422326] focus:ring-[#422326]"
+                                            className="text-vastu-dark focus:ring-vastu-dark"
                                         />
                                         <span className="text-sm">Внешняя ссылка</span>
                                     </label>
@@ -237,11 +237,11 @@ export default function ManageStreams() {
                                         type="url"
                                         value={formData.audio_url}
                                         onChange={e => setFormData({ ...formData, audio_url: e.target.value })}
-                                        className="w-full rounded-lg border-gray-300 focus:ring-[#422326] focus:border-[#422326]"
+                                        className="w-full rounded-lg border-gray-300 focus:ring-vastu-dark focus:border-vastu-dark"
                                         placeholder="https://..."
                                     />
                                 ) : (
-                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#422326] transition-colors relative">
+                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-vastu-dark transition-colors relative">
                                         <input
                                             type="file"
                                             accept="audio/*"
@@ -298,7 +298,7 @@ export default function ManageStreams() {
                                     rows={3}
                                     value={formData.description}
                                     onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                    className="w-full rounded-lg border-gray-300 focus:ring-[#422326] focus:border-[#422326]"
+                                    className="w-full rounded-lg border-gray-300 focus:ring-vastu-dark focus:border-vastu-dark"
                                     placeholder="О чем был этот эфир?"
                                 />
                             </div>
@@ -315,7 +315,7 @@ export default function ManageStreams() {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-6 py-2 bg-[#422326] text-white rounded-lg hover:bg-[#2b1618] transition-colors flex items-center"
+                                    className="px-6 py-2 bg-vastu-dark text-white rounded-lg hover:bg-vastu-dark-deep transition-colors flex items-center"
                                 >
                                     <Save className="w-4 h-4 mr-2" />
                                     {editingId ? 'Сохранить Изменения' : 'Сохранить Эфир'}
@@ -407,7 +407,7 @@ export default function ManageStreams() {
             {/* Mobile FAB */}
             <button
                 onClick={handleAddNew}
-                className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-[#422326] text-white rounded-full shadow-xl flex items-center justify-center z-40 hover:scale-110 transition-transform"
+                className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-vastu-dark text-white rounded-full shadow-xl flex items-center justify-center z-40 hover:scale-110 transition-transform"
             >
                 <Plus className="w-8 h-8" />
             </button>

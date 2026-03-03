@@ -1,10 +1,18 @@
-import { ExternalLink, Play, Calendar, Video, MessageCircle, Star, ArrowRight, BookOpen, Library, Smartphone, LogOut } from 'lucide-react';
+import { ExternalLink, Play, Calendar, Video, MessageCircle, Star, ArrowRight, BookOpen, Library, Smartphone, LogOut, Map } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useModules } from '../../hooks/useCourse';
 
 export default function WelcomePage() {
     const { user, signOut, loading } = useAuth();
     const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Teilnehmer';
+    const { modules } = useModules();
+
+    // Calculate overall course progress
+    const mainModules = modules.filter(m => m.id !== 'pre' && m.id !== 'bonus');
+    const totalLessons = mainModules.reduce((acc, m) => acc + m.lektionen.length, 0);
+    const completedLessons = mainModules.reduce((acc, m) => acc + m.lektionen.filter(l => l.isCompleted).length, 0);
+    const progressPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
     if (loading) return null;
     if (!user) return <Navigate to="/login" replace />;
@@ -15,9 +23,7 @@ export default function WelcomePage() {
             <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-vastu-sand/40">
                 <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
                     <Link to="/student/welcome" className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full border-2 border-vastu-dark/25 flex items-center justify-center">
-                            <span className="font-script text-vastu-dark text-2xl leading-none mt-0.5">V</span>
-                        </div>
+                        <img src="/logo.png" alt="Academy" className="w-10 h-10 object-contain" />
                         <div className="flex flex-col">
                             <span className="font-serif text-sm tracking-[0.12em] text-vastu-dark leading-none">VASTULOGIE</span>
                             <span className="font-script text-vastu-gold text-xs">Ausbildung</span>
@@ -35,7 +41,7 @@ export default function WelcomePage() {
             {/* Hero — Full-screen */}
             <section className="min-h-screen flex items-center justify-center relative overflow-hidden pt-16">
                 {/* Background layers */}
-                <div className="absolute inset-0 bg-[#2a1f18]" />
+                <div className="absolute inset-0 bg-vastu-dark-deep" />
                 <div className="absolute inset-0 grain-overlay opacity-30" />
                 <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-vastu-gold/8 rounded-full blur-[150px] translate-x-1/4 -translate-y-1/4" />
                 <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-vastu-accent/5 rounded-full blur-[120px] -translate-x-1/4 translate-y-1/4" />
@@ -62,7 +68,7 @@ export default function WelcomePage() {
                     {/* CTA */}
                     <Link
                         to="/student"
-                        className="inline-flex items-center gap-3 bg-vastu-gold text-[#2a1f18] px-8 py-4 rounded-full font-sans font-semibold text-lg hover:bg-vastu-gold/90 transition-all shadow-xl shadow-black/30 hover:shadow-2xl hover:scale-[1.02] animate-fade-in"
+                        className="inline-flex items-center gap-3 bg-vastu-gold text-vastu-dark-deep px-8 py-4 rounded-full font-sans font-semibold text-lg hover:bg-vastu-gold/90 transition-all shadow-xl shadow-black/30 hover:shadow-2xl hover:scale-[1.02] animate-fade-in"
                         style={{ animationDelay: '0.5s' }}
                     >
                         Zum Kurs
@@ -71,9 +77,11 @@ export default function WelcomePage() {
                 </div>
 
                 {/* Scroll hint */}
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/25 text-xs font-sans flex flex-col items-center gap-2 animate-fade-in" style={{ animationDelay: '0.8s' }}>
-                    <span>Mehr erfahren</span>
-                    <div className="w-px h-8 bg-gradient-to-b from-white/20 to-transparent" />
+                <div className="absolute bottom-8 inset-x-0 flex justify-center text-white/25 text-xs font-sans animate-fade-in" style={{ animationDelay: '0.8s' }}>
+                    <div className="flex flex-col items-center gap-2">
+                        <span>Mehr erfahren</span>
+                        <div className="w-px h-8 bg-gradient-to-b from-white/20 to-transparent" />
+                    </div>
                 </div>
             </section>
 
@@ -101,31 +109,89 @@ export default function WelcomePage() {
 
                 {/* Info Grid */}
                 <div className="grid md:grid-cols-2 gap-6">
-                    {/* Schedule — Timeline */}
+                    {/* Schedule — Timeline with module details */}
                     <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 p-6 md:p-8">
                         <h3 className="font-serif text-xl text-vastu-dark mb-2 flex items-center gap-2">
                             <Calendar className="text-vastu-gold" size={20} />
                             Unsere Treffen
                         </h3>
-                        <p className="text-vastu-text-light font-body text-sm mb-5">Jeden Mittwoch um 9 Uhr (inkl. Aufzeichnung)</p>
+                        <p className="text-vastu-text-light font-body text-sm mb-5">Mittwochs um 9 Uhr [inkl. Aufzeichnung]</p>
 
-                        <div className="relative pl-6">
+                        <div className="relative pl-6 space-y-1">
                             <div className="absolute left-[9px] top-2 bottom-2 w-px bg-vastu-sand" />
                             {[
-                                { label: 'Modul 1', date: '20.03 (Freitag)', active: true },
-                                { label: 'Modul 2', date: '25.03' },
-                                { label: 'Modul 3', date: '01.04' },
-                                { label: 'Modul 4', date: '08.04' },
-                                { label: 'Modul 5', date: '15.04' },
-                                { label: 'Modul 6', date: '22.04' },
-                                { label: 'Modul 7', date: '29.04' },
+                                {
+                                    label: 'Modul 1: Vastu Karte, Elemente, Reinigung & Energien',
+                                    date: '20.03',
+                                    note: 'Ausnahme: Freitag',
+                                    active: true,
+                                    topics: ['1.1 Vastu Karte & Elemente', '1.2 Energetische Reinigung', '1.3 Experimente mit den Elementen', '1.4 Innere & Äußere Energien'],
+                                },
+                                {
+                                    label: 'Modul 2: Planeten, Charaktere, Sektoren, Yantren',
+                                    date: '25.03',
+                                    topics: ['2.1 Planeten, Charaktere, Sektoren, Yantren'],
+                                },
+                                {
+                                    label: 'Modul 3: Räume im Detail',
+                                    date: '01.04',
+                                    topics: ['3.1 Schlafzimmer, Arbeitszimmer, Küche & andere Zimmer', '3.2 Toilette & Badezimmer'],
+                                },
+                                {
+                                    label: 'Modul 4: Eingangstür, Berufung & Spiegel',
+                                    date: '08.04',
+                                    topics: ['4.1 Eingangstür & Berufung', '4.2 Spiegel'],
+                                },
+                                {
+                                    label: 'Modul 5: Vastu Design',
+                                    date: '15.04',
+                                    topics: ['5.1 Vastu Design für jeden Sektor & alle Räume'],
+                                },
+                                {
+                                    label: 'Modul 6: Vastu Coaching',
+                                    date: '22.04',
+                                },
+                                {
+                                    label: 'Modul 7: Bilder & spezielle Korrekturen',
+                                    date: '29.04',
+                                },
                             ].map((item, i) => (
-                                <div key={i} className="relative flex items-center gap-4 py-2">
-                                    <div className={`absolute left-[-15px] w-[7px] h-[7px] rounded-full ${item.active ? 'bg-vastu-gold ring-4 ring-vastu-gold/20' : 'bg-vastu-sand'}`} />
-                                    <span className="font-sans text-sm font-medium text-vastu-dark">{item.label}</span>
-                                    <span className="text-vastu-text-light font-sans text-xs ml-auto">{item.date}</span>
+                                <div key={i} className="relative py-2">
+                                    <div className="flex items-start gap-3">
+                                        <div className={`absolute left-[-15px] top-[11px] w-[7px] h-[7px] rounded-full ${item.active ? 'bg-vastu-gold ring-4 ring-vastu-gold/20' : 'bg-vastu-sand'}`} />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <span className="font-sans text-sm font-medium text-vastu-dark">{item.label}</span>
+                                                <span className="text-vastu-text-light font-sans text-xs ml-auto shrink-0">{item.date}</span>
+                                            </div>
+                                            {item.note && (
+                                                <span className="text-xs font-sans text-vastu-gold italic">{item.note}</span>
+                                            )}
+                                            {item.topics && (
+                                                <ul className="mt-1.5 space-y-0.5">
+                                                    {item.topics.map((t, j) => (
+                                                        <li key={j} className="text-xs font-body text-vastu-text-light pl-2 border-l border-vastu-sand/50">{t}</li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             ))}
+
+                            {/* Bonus */}
+                            <div className="relative py-2 mt-1 border-t border-vastu-sand/50 pt-3">
+                                <div className={`absolute left-[-15px] top-[17px] w-[7px] h-[7px] rounded-full bg-vastu-sand`} />
+                                <span className="font-sans text-sm font-medium text-vastu-dark">Bonus</span>
+                                <ul className="mt-1.5 space-y-0.5">
+                                    <li className="text-xs font-body text-vastu-text-light pl-2 border-l border-vastu-sand/50">Grundstück nach Vastu</li>
+                                    <li className="text-xs font-body text-vastu-text-light pl-2 border-l border-vastu-sand/50">Haustiere</li>
+                                    <li className="text-xs font-body text-vastu-text-light pl-2 border-l border-vastu-sand/50">Umzug</li>
+                                    <li className="text-xs font-body text-vastu-text-light pl-2 border-l border-vastu-sand/50">Pflanzen</li>
+                                </ul>
+                            </div>
+
+                            {/* Abschlussball */}
                             <div className="relative flex items-center gap-4 py-2 mt-2 border-t border-vastu-sand/50 pt-3">
                                 <div className="absolute left-[-15px] w-[7px] h-[7px] rounded-full bg-vastu-gold ring-4 ring-vastu-gold/15" />
                                 <span className="font-serif text-sm font-medium text-vastu-dark">✨ Abschlussball</span>
@@ -178,6 +244,21 @@ export default function WelcomePage() {
                                 <ArrowRight className="text-vastu-gold/50 group-hover:text-vastu-gold transition-colors" size={20} />
                             </div>
                         </Link>
+
+                        <a href="https://www.vastusphere.net" target="_blank" rel="noopener noreferrer"
+                            className="block bg-vastu-dark grain-overlay rounded-2xl shadow-lg shadow-vastu-dark/15 p-5 hover:shadow-xl transition-all group text-white relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-40 h-40 bg-vastu-gold opacity-10 rounded-full blur-[60px] translate-x-1/3 -translate-y-1/3" />
+                            <div className="flex items-center gap-4 relative z-10">
+                                <div className="w-[52px] h-[52px] rounded-xl bg-vastu-gold/20 flex items-center justify-center group-hover:bg-vastu-gold/30 transition-colors shrink-0">
+                                    <Map className="text-vastu-gold" size={26} />
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="font-serif text-lg text-vastu-gold">Vastu Karte erstellen</h4>
+                                    <p className="text-white/50 font-body text-sm">Erstelle deine persönliche Vastu Karte</p>
+                                </div>
+                                <ExternalLink className="text-vastu-gold/50 group-hover:text-vastu-gold transition-colors" size={20} />
+                            </div>
+                        </a>
                     </div>
                 </div>
 
@@ -204,20 +285,27 @@ export default function WelcomePage() {
                 {/* Instructional Videos */}
                 <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 p-6 md:p-8">
                     <h3 className="font-serif text-xl text-vastu-dark mb-4">📋 Hilfreiche Anleitungen</h3>
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid md:grid-cols-1 gap-4">
                         <div className="bg-vastu-cream rounded-xl p-5 border border-vastu-sand/30 accent-bar-left">
                             <h4 className="font-serif font-medium text-vastu-dark mb-1">Vimeo Untertitel nutzen</h4>
                             <p className="text-sm font-body text-vastu-text-light">Erfahre, wie du Untertitel in Vimeo aktivierst und anpasst.</p>
                         </div>
-                        <div className="bg-vastu-cream rounded-xl p-5 border border-vastu-sand/30 accent-bar-left">
-                            <h4 className="font-serif font-medium text-vastu-dark mb-1">App auf dem Handy installieren</h4>
-                            <p className="text-sm font-body text-vastu-text-light">
-                                <Link to="/student/install" className="text-vastu-dark underline underline-offset-4 hover:text-vastu-gold transition-colors">
-                                    Hier klicken für die Anleitung →
-                                </Link>
-                            </p>
-                        </div>
                     </div>
+                </div>
+
+                {/* Course Progress Bar */}
+                <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 p-6 md:p-8">
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-serif text-lg text-vastu-dark">Dein Kursfortschritt</h3>
+                        <span className="text-2xl font-sans font-bold text-vastu-dark">{progressPercent}%</span>
+                    </div>
+                    <div className="h-3 bg-vastu-sand/30 rounded-full overflow-hidden">
+                        <div
+                            className={`h-full bg-gradient-to-r from-vastu-dark to-vastu-gold rounded-full transition-all duration-700 ease-out ${progressPercent > 0 ? 'progress-glow active' : ''}`}
+                            style={{ width: `${progressPercent}%` }}
+                        />
+                    </div>
+                    <p className="text-xs font-sans text-vastu-text-light mt-2">{completedLessons} von {totalLessons} Lektionen abgeschlossen</p>
                 </div>
             </section>
 

@@ -38,10 +38,18 @@ export default function Library() {
                         },
                         {
                             id: 'lib3',
-                            title: 'Bonus: Haustiere & Vastu',
+                            title: 'Bonus: Haustiere, Pflanzen & Tiere',
                             category: 'bonus',
                             file_url: '#',
-                            description: 'Zusätzliches Material rund um Haustiere im Vastu',
+                            description: 'Zusätzliches Material rund um Haustiere, Pflanzen und Tiere im Vastu',
+                            created_at: new Date().toISOString(),
+                        },
+                        {
+                            id: 'lib4',
+                            title: 'Bonus: Grundstück [bei Feedback]',
+                            category: 'bonus',
+                            file_url: '#',
+                            description: 'Grundstücksauswahl und -bewertung nach Vastu-Prinzipien',
                             created_at: new Date().toISOString(),
                         },
                     ]);
@@ -100,14 +108,14 @@ export default function Library() {
         <div className="animate-fade-in space-y-6">
             <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 overflow-hidden">
                 {/* Header */}
-                <div className="bg-vastu-dark grain-overlay p-8 md:p-10 text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-vastu-gold opacity-8 rounded-full blur-[80px] translate-x-1/3 -translate-y-1/3" />
+                <div className="bg-vastu-accent grain-overlay p-8 md:p-10 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-vastu-dark opacity-5 rounded-full blur-[80px] translate-x-1/3 -translate-y-1/3" />
                     <div className="relative z-10">
-                        <h1 className="text-3xl md:text-4xl font-serif mb-2 flex items-center gap-3">
+                        <h1 className="text-3xl md:text-4xl font-serif mb-2 flex items-center gap-3 text-vastu-dark">
                             <BookOpen size={28} />
                             Bibliothek
                         </h1>
-                        <p className="text-white/50 font-body text-lg">Alle Materialien und Unterlagen zum Herunterladen</p>
+                        <p className="text-vastu-dark/50 font-body text-lg">Alle Materialien und Unterlagen zum Herunterladen</p>
                     </div>
                 </div>
             </div>

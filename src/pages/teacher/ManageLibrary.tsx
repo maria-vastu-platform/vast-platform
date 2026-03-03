@@ -25,7 +25,8 @@ export default function ManageLibrary() {
                     { id: 'master1', title: 'Vastulogie Kursbuch — Vollständig', category: 'guide' as LibraryCategory, file_url: '#', description: 'Das vollständige Kursbuch der Ausbildung', created_at: '2026-02-01T10:00:00Z', is_master_file: true },
                     { id: 'lib1', title: 'Alle Slides — Komplett', category: 'slides' as LibraryCategory, file_url: '#', description: 'Vollständige Sammlung aller Präsentationsfolien', created_at: '2026-02-05T10:00:00Z' },
                     { id: 'lib2', title: 'Vastu Reinigung – Leitfaden', category: 'guide' as LibraryCategory, file_url: '#', description: 'Schritt-für-Schritt-Anleitung zur Reinigung', created_at: '2026-02-08T10:00:00Z' },
-                    { id: 'lib3', title: 'Bonus: Haustiere & Vastu', category: 'bonus' as LibraryCategory, file_url: '#', description: 'Zusätzliches Material zu Haustieren', created_at: '2026-02-10T10:00:00Z' },
+                    { id: 'lib3', title: 'Bonus: Haustiere, Pflanzen & Tiere', category: 'bonus' as LibraryCategory, file_url: '#', description: 'Zusätzliches Material zu Haustieren, Pflanzen und Tieren', created_at: '2026-02-10T10:00:00Z' },
+                    { id: 'lib4', title: 'Bonus: Grundstück [bei Feedback]', category: 'bonus' as LibraryCategory, file_url: '#', description: 'Grundstücksauswahl und -bewertung nach Vastu', created_at: '2026-02-12T10:00:00Z' },
                 ]);
                 setLoading(false);
                 return;

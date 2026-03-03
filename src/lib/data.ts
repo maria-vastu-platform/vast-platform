@@ -92,7 +92,7 @@ export const COURSE_DATA: Course = {
         {
             id: 'm6',
             title: 'Modul 6',
-            description: 'Vastu Coaching Übungen & Beispiele',
+            description: 'Vastu Coaching',
             isLocked: true,
             availableFrom: '2026-04-22',
             moduleMaterials: [],
@@ -119,10 +119,10 @@ export const COURSE_DATA: Course = {
             isLocked: true,
             moduleMaterials: [],
             lektionen: [
-                { id: 'b1', title: 'Haustiere', materials: [] },
-                { id: 'b2', title: 'Umzug', materials: [] },
-                { id: 'b3', title: 'Pflanzen', materials: [] },
-                { id: 'b4', title: 'Grundstück Basiswissen', materials: [] },
+                { id: 'b1', title: 'Grundstück nach Vastu', materials: [] },
+                { id: 'b2', title: 'Haustiere', materials: [] },
+                { id: 'b3', title: 'Umzug', materials: [] },
+                { id: 'b4', title: 'Pflanzen', materials: [] },
             ],
         },
     ],

@@ -110,7 +110,7 @@ export default function LiveStreams() {
         <div className="space-y-12 animate-fade-in">
             {/* Header */}
             <div>
-                <h1 className="font-serif text-3xl text-[#422326] mb-2">Прямые Эфиры</h1>
+                <h1 className="font-serif text-3xl text-vastu-dark mb-2">Прямые Эфиры</h1>
             </div>
 
             {/* Upcoming Stream (Featured) */}
@@ -127,7 +127,7 @@ export default function LiveStreams() {
                                 </span>
                                 Скоро в эфире
                             </div>
-                            <h2 className="font-serif text-2xl text-[#422326] mb-4">
+                            <h2 className="font-serif text-2xl text-vastu-dark mb-4">
                                 {upcomingStreams[0].title}
                             </h2>
                             <p className="text-gray-600 mb-6">
@@ -145,7 +145,7 @@ export default function LiveStreams() {
                                 </div>
                             </div>
 
-                            <button className="px-6 py-3 bg-[#422326] text-white rounded-xl hover:bg-[#2b1618] transition-colors flex items-center gap-2">
+                            <button className="px-6 py-3 bg-vastu-dark text-white rounded-xl hover:bg-vastu-dark-deep transition-colors flex items-center gap-2">
                                 <Video className="w-5 h-5" />
                                 Перейти к трансляции
                             </button>
@@ -203,7 +203,7 @@ export default function LiveStreams() {
                                     <div className="text-sm text-gray-500 mb-2">
                                         {new Date(stream.date).toLocaleDateString('ru-RU')}
                                     </div>
-                                    <h4 className="font-serif text-lg text-[#422326] mb-2">{stream.title}</h4>
+                                    <h4 className="font-serif text-lg text-vastu-dark mb-2">{stream.title}</h4>
                                     <p className="text-sm text-gray-500 line-clamp-2">
                                         {stream.description}
                                     </p>

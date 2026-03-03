@@ -62,9 +62,7 @@ export default function LoginPage() {
                 {/* Brand */}
                 <div className="text-center mb-10">
                     <div className="w-18 h-18 mx-auto mb-5 relative">
-                        <div className="w-[72px] h-[72px] mx-auto rounded-full border-2 border-vastu-dark/30 flex items-center justify-center">
-                            <span className="font-script text-vastu-dark text-4xl leading-none mt-1">V</span>
-                        </div>
+                        <img src="/logo.png" alt="Academy" className="w-[72px] h-[72px] mx-auto object-contain" />
                     </div>
                     <h1 className="text-3xl font-serif tracking-[0.15em] text-vastu-dark">VASTULOGIE</h1>
                     <p className="font-script text-vastu-gold text-xl mt-1">Ausbildung</p>

@@ -7,22 +7,29 @@ interface StudentProfile {
     email: string;
     full_name: string | null;
     created_at: string;
+    kohorte_id?: string;
 }
+
+const MOCK_KOHORTEN = [
+    { id: 'k1', name: 'Frühling 2026', color: '#c4b7b3' },
+    { id: 'k2', name: 'Herbst 2026', color: '#d4a574' },
+];
 
 export default function Students() {
     const [students, setStudents] = useState<StudentProfile[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [filterKohorte, setFilterKohorte] = useState<string>('all');
 
     useEffect(() => {
         async function fetchStudents() {
             try {
                 if (!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('placeholder')) {
                     setStudents([
-                        { id: '1', full_name: 'Anna Schneider', email: 'anna@beispiel.de', created_at: '2026-02-10T10:00:00Z' },
-                        { id: '2', full_name: 'Lisa Müller', email: 'lisa@beispiel.de', created_at: '2026-02-12T14:30:00Z' },
-                        { id: '3', full_name: 'Sophie Wagner', email: 'sophie@beispiel.de', created_at: '2026-02-15T09:15:00Z' },
-                        { id: '4', full_name: 'Julia Fischer', email: 'julia@beispiel.de', created_at: '2026-02-18T11:45:00Z' },
+                        { id: '1', full_name: 'Anna Schneider', email: 'anna@beispiel.de', created_at: '2026-02-10T10:00:00Z', kohorte_id: 'k1' },
+                        { id: '2', full_name: 'Lisa Müller', email: 'lisa@beispiel.de', created_at: '2026-02-12T14:30:00Z', kohorte_id: 'k1' },
+                        { id: '3', full_name: 'Sophie Wagner', email: 'sophie@beispiel.de', created_at: '2026-02-15T09:15:00Z', kohorte_id: 'k1' },
+                        { id: '4', full_name: 'Julia Fischer', email: 'julia@beispiel.de', created_at: '2026-02-18T11:45:00Z', kohorte_id: 'k2' },
                     ]);
                     setLoading(false);
                     return;
@@ -45,6 +52,12 @@ export default function Students() {
         fetchStudents();
     }, []);
 
+    const assignKohorte = (studentId: string, kohorteId: string) => {
+        setStudents(prev => prev.map(s =>
+            s.id === studentId ? { ...s, kohorte_id: kohorteId || undefined } : s
+        ));
+    };
+
     if (loading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-vastu-dark" size={40} /></div>;
 
     const inviteLink = `${window.location.origin}/register`;
@@ -54,10 +67,14 @@ export default function Students() {
         alert('Link wurde kopiert!');
     };
 
-    const filtered = students.filter(s =>
-        (s.full_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.email.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filtered = students.filter(s => {
+        const matchesSearch = (s.full_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            s.email.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesKohorte = filterKohorte === 'all' || s.kohorte_id === filterKohorte || (filterKohorte === 'none' && !s.kohorte_id);
+        return matchesSearch && matchesKohorte;
+    });
+
+    const getKohorte = (id?: string) => MOCK_KOHORTEN.find(k => k.id === id);
 
     return (
         <div className="max-w-5xl mx-auto animate-fade-in">
@@ -83,8 +100,22 @@ export default function Students() {
                 </code>
             </div>
 
-            <div className="flex items-center justify-between mb-8">
-                <p className="text-gray-500">Teilnehmerliste verwalten ({filtered.length})</p>
+            <div className="flex items-center justify-between mb-8 gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                    <p className="text-gray-500">Teilnehmerliste ({filtered.length})</p>
+                    {/* Kohorte filter */}
+                    <select
+                        value={filterKohorte}
+                        onChange={e => setFilterKohorte(e.target.value)}
+                        className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-vastu-accent bg-white"
+                    >
+                        <option value="all">Alle Kohorten</option>
+                        {MOCK_KOHORTEN.map(k => (
+                            <option key={k.id} value={k.id}>{k.name}</option>
+                        ))}
+                        <option value="none">Nicht zugewiesen</option>
+                    </select>
+                </div>
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <input
@@ -103,38 +134,49 @@ export default function Students() {
                         <tr>
                             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Teilnehmer</th>
                             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">E-Mail</th>
+                            <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Kohorte</th>
                             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Registriert am</th>
-                            <th className="text-right py-4 px-6 text-sm font-medium text-gray-500">Aktionen</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {filtered.length > 0 ? (
-                            filtered.map((student) => (
-                                <tr key={student.id} className="hover:bg-gray-50/50 transition-colors">
-                                    <td className="py-4 px-6">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-vastu-light flex items-center justify-center text-vastu-dark">
-                                                <User size={20} />
+                            filtered.map((student) => {
+                                const kohorte = getKohorte(student.kohorte_id);
+                                return (
+                                    <tr key={student.id} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="py-4 px-6">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-vastu-light flex items-center justify-center text-vastu-dark">
+                                                    <User size={20} />
+                                                </div>
+                                                <span className="font-medium text-vastu-dark">{student.full_name || 'Kein Name'}</span>
                                             </div>
-                                            <span className="font-medium text-vastu-dark">{student.full_name || 'Kein Name'}</span>
-                                        </div>
-                                    </td>
-                                    <td className="py-4 px-6 text-gray-600">
-                                        <div className="flex items-center gap-2">
-                                            <Mail size={14} className="text-gray-400" />
-                                            {student.email}
-                                        </div>
-                                    </td>
-                                    <td className="py-4 px-6 text-gray-500 text-sm">
-                                        {new Date(student.created_at).toLocaleDateString('de-DE')}
-                                    </td>
-                                    <td className="py-4 px-6 text-right">
-                                        <button className="text-sm text-vastu-dark hover:text-vastu-dark/70 font-medium">
-                                            Profil
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
+                                        </td>
+                                        <td className="py-4 px-6 text-gray-600">
+                                            <div className="flex items-center gap-2">
+                                                <Mail size={14} className="text-gray-400" />
+                                                {student.email}
+                                            </div>
+                                        </td>
+                                        <td className="py-4 px-6">
+                                            <select
+                                                value={student.kohorte_id || ''}
+                                                onChange={e => assignKohorte(student.id, e.target.value)}
+                                                className="text-sm px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:border-vastu-accent bg-white"
+                                                style={kohorte ? { borderColor: kohorte.color, color: kohorte.color } : {}}
+                                            >
+                                                <option value="">— Keine —</option>
+                                                {MOCK_KOHORTEN.map(k => (
+                                                    <option key={k.id} value={k.id}>{k.name}</option>
+                                                ))}
+                                            </select>
+                                        </td>
+                                        <td className="py-4 px-6 text-gray-500 text-sm">
+                                            {new Date(student.created_at).toLocaleDateString('de-DE')}
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         ) : (
                             <tr>
                                 <td colSpan={4} className="py-12 text-center text-gray-500">

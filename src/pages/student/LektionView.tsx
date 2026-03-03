@@ -52,12 +52,12 @@ export default function LektionView() {
             {/* Lesson Content Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 overflow-hidden">
                 {/* Header with grain */}
-                <div className="bg-vastu-dark grain-overlay p-6 md:p-10 text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-vastu-gold opacity-8 rounded-full blur-[80px] translate-x-1/3 -translate-y-1/3" />
+                <div className="bg-vastu-accent grain-overlay p-6 md:p-10 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-vastu-dark opacity-5 rounded-full blur-[80px] translate-x-1/3 -translate-y-1/3" />
                     <div className="relative z-10">
-                        <h1 className="text-2xl md:text-4xl font-serif mb-2">{lektion.title}</h1>
+                        <h1 className="text-2xl md:text-4xl font-serif mb-2 text-vastu-dark">{lektion.title}</h1>
                         {lektion.description && (
-                            <p className="text-white/50 font-body leading-relaxed max-w-2xl text-lg">{lektion.description}</p>
+                            <p className="text-vastu-dark/50 font-body leading-relaxed max-w-2xl text-lg">{lektion.description}</p>
                         )}
                     </div>
                 </div>
@@ -72,7 +72,7 @@ export default function LektionView() {
                 {/* Homework Description — styled with gold left bar */}
                 {lektion.homeworkDescription && (
                     <div className="px-6 md:px-8 pb-6">
-                        <div className="bg-vastu-cream rounded-xl p-6 border border-vastu-sand/30 accent-bar-left" style={{ borderLeftColor: '#d4a574' }}>
+                        <div className="bg-vastu-cream rounded-xl p-6 border border-vastu-sand/30 accent-bar-left" style={{ borderLeftColor: '#c4b7b3' }}>
                             <h3 className="font-serif text-lg text-vastu-dark mb-3 flex items-center gap-2">
                                 <BookOpen size={18} className="text-vastu-gold" />
                                 Hausaufgabe

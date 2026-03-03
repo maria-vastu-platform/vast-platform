@@ -12,6 +12,7 @@ import TeacherLayout from './components/layout/TeacherLayout';
 import CourseEditor from './pages/teacher/CourseEditor';
 import Students from './pages/teacher/Students';
 import ManageLibrary from './pages/teacher/ManageLibrary';
+import ManageKohorten from './pages/teacher/ManageKohorten';
 
 import { AuthProvider } from './contexts/AuthContext';
 import RegisterPage from './pages/RegisterPage';
@@ -72,6 +73,7 @@ function App() {
                         <Route path="course-editor" element={<CourseEditor />} />
                         <Route path="students" element={<Students />} />
                         <Route path="library" element={<ManageLibrary />} />
+                        <Route path="kohorten" element={<ManageKohorten />} />
                         <Route path="settings" element={<div className="text-center p-10">Einstellungen (In Entwicklung)</div>} />
                     </Route>
 
