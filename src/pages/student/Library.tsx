@@ -1,5 +1,6 @@
-import { FileText, Download, Loader2, BookOpen, Presentation, Gift, BookMarked } from 'lucide-react';
+import { FileText, Download, Loader2, BookOpen, Presentation, Gift, BookMarked, ArrowLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { LibraryItem, LibraryCategory } from '../../lib/types';
 
@@ -14,6 +15,7 @@ export default function Library() {
     const [items, setItems] = useState<LibraryItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeCategory, setActiveCategory] = useState<string>('all');
+    const navigate = useNavigate();
 
     useEffect(() => {
         async function fetchLibrary() {
@@ -105,7 +107,16 @@ export default function Library() {
         : regularItems.filter(i => i.category === activeCategory);
 
     return (
-        <div className="animate-fade-in space-y-6">
+        <div className="animate-fade-in space-y-4">
+            {/* Back Navigation */}
+            <button
+                onClick={() => navigate(-1)}
+                className="inline-flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors group text-sm font-sans"
+            >
+                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                <span>Zurück</span>
+            </button>
+
             <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 overflow-hidden">
                 {/* Header */}
                 <div className="bg-vastu-accent grain-overlay p-8 md:p-10 relative overflow-hidden">

@@ -1,8 +1,18 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Play, ChevronRight, FileText, Loader2, CheckCircle2, Download, Lock, Gift, Video } from 'lucide-react';
+import { Play, ChevronRight, FileText, Loader2, CheckCircle2, Download, Lock, Gift, Video, ArrowLeft, ExternalLink } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useModules } from '../../hooks/useCourse';
 import { supabase } from '../../lib/supabase';
+
+// Placeholder links for Module 5 — Maria will provide real URLs later
+const MODULE_5_LINKS = [
+    { title: 'Vorhänge & Gardinen', url: '#', description: 'Empfehlungen für Vorhänge nach Vastu-Prinzipien' },
+    { title: 'Teppiche', url: '#', description: 'Teppiche für verschiedene Räume und Sektoren' },
+    { title: 'Dekoration & Accessoires', url: '#', description: 'Dekorationselemente für harmonische Räume' },
+    { title: 'Farben & Materialien', url: '#', description: 'Farbpaletten und Materialien nach Vastu' },
+    { title: 'Möbel & Einrichtung', url: '#', description: 'Möbelempfehlungen für jeden Sektor' },
+    { title: 'Beleuchtung', url: '#', description: 'Lichtkonzepte nach Vastu-Prinzipien' },
+];
 
 const stripHtml = (html: string) => {
     const tmp = document.createElement('DIV');
@@ -25,6 +35,7 @@ export default function StudentDashboard() {
     const [showUnlockModal, setShowUnlockModal] = useState(false);
     const [reviewUrl, setReviewUrl] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [activeTab, setActiveTab] = useState<'lektionen' | 'materialien' | 'links'>('lektionen');
 
     const searchParams = new URLSearchParams(location.search);
     const activeModuleId = searchParams.get('module');
@@ -71,8 +82,18 @@ export default function StudentDashboard() {
         }
     };
 
+    const hasLinks = activeMod.id === 'm5';
+
     return (
-        <div className="animate-fade-in">
+        <div className="animate-fade-in space-y-4">
+            {/* Back Navigation */}
+            <button
+                onClick={() => navigate(-1)}
+                className="inline-flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors group text-sm font-sans"
+            >
+                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                <span>Zurück</span>
+            </button>
             <div className="bg-white rounded-xl md:rounded-2xl shadow-sm border border-vastu-sand/50 overflow-hidden min-h-[calc(100vh-5rem)]">
                 {/* Module Header — grain texture + decorative module number */}
                 <div className="bg-vastu-accent grain-overlay p-6 md:p-8 relative overflow-hidden">
@@ -180,6 +201,39 @@ export default function StudentDashboard() {
                     </div>
                 )}
 
+                {/* Tab Bar */}
+                <div className="flex gap-1 px-5 md:px-6 pt-4 pb-0 border-b border-vastu-sand/30 overflow-x-auto">
+                    <button
+                        onClick={() => setActiveTab('lektionen')}
+                        className={`px-4 py-2.5 text-sm font-sans font-medium rounded-t-lg transition-all whitespace-nowrap ${activeTab === 'lektionen'
+                            ? 'text-vastu-dark border-b-2 border-vastu-dark bg-vastu-cream/30'
+                            : 'text-vastu-text-light hover:text-vastu-dark hover:bg-vastu-cream/20'
+                            }`}
+                    >
+                        <span className="flex items-center gap-2"><Play size={14} /> Lektionen</span>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('materialien')}
+                        className={`px-4 py-2.5 text-sm font-sans font-medium rounded-t-lg transition-all whitespace-nowrap ${activeTab === 'materialien'
+                            ? 'text-vastu-dark border-b-2 border-vastu-dark bg-vastu-cream/30'
+                            : 'text-vastu-text-light hover:text-vastu-dark hover:bg-vastu-cream/20'
+                            }`}
+                    >
+                        <span className="flex items-center gap-2"><FileText size={14} /> Materialien</span>
+                    </button>
+                    {hasLinks && (
+                        <button
+                            onClick={() => setActiveTab('links')}
+                            className={`px-4 py-2.5 text-sm font-sans font-medium rounded-t-lg transition-all whitespace-nowrap ${activeTab === 'links'
+                                ? 'text-vastu-dark border-b-2 border-vastu-dark bg-vastu-cream/30'
+                                : 'text-vastu-text-light hover:text-vastu-dark hover:bg-vastu-cream/20'
+                                }`}
+                        >
+                            <span className="flex items-center gap-2"><ExternalLink size={14} /> Links</span>
+                        </button>
+                    )}
+                </div>
+
                 <div className="p-5 md:p-6 relative">
                     {/* Overlay for locked content */}
                     {activeMod.id === 'bonus' && activeMod.isLocked && (
@@ -189,103 +243,185 @@ export default function StudentDashboard() {
                             <p className="text-vastu-text-light text-sm">Schalte den Bonus oben frei, um Zugriff zu erhalten.</p>
                         </div>
                     )}
-                    <div className="grid md:grid-cols-3 gap-6">
-                        {/* Lessons List — with left accent bars */}
-                        <div className="md:col-span-2 space-y-4">
-                            <h3 className="font-serif text-lg text-vastu-dark mb-3 flex items-center gap-2">
-                                <Play className="text-vastu-gold" size={20} />
-                                Lektionen
-                            </h3>
 
-                            {activeMod.lektionen.length === 0 ? (
-                                <div className="text-center py-6 text-vastu-text-light">
-                                    <p className="text-lg font-body mb-2">Noch keine Lektionen verfügbar</p>
-                                    <p className="text-sm font-sans">Die Inhalte werden bald freigeschaltet.</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-3 animate-stagger">
-                                    {activeMod.lektionen.map((lektion) => (
-                                        <Link
-                                            key={lektion.id}
-                                            to={`/student/module/${activeMod.id}/lektion/${lektion.id}`}
-                                            className={`flex items-center justify-between p-4 rounded-xl border transition-all group relative overflow-hidden ${lektion.isCompleted
-                                                ? 'border-green-200 bg-green-50/30 hover:bg-green-50/60'
-                                                : 'border-vastu-sand/50 hover:border-vastu-gold/40 hover:bg-vastu-cream/50'
-                                                }`}
-                                        >
-                                            {/* Left accent bar */}
-                                            <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-xl transition-colors ${lektion.isCompleted ? 'bg-green-400' : 'bg-vastu-sand/50 group-hover:bg-vastu-gold'
-                                                }`} />
-
-                                            <div className="flex items-center gap-4 pl-2">
-                                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all ${lektion.isCompleted
-                                                    ? 'bg-green-100 text-green-600'
-                                                    : 'bg-vastu-cream text-vastu-dark group-hover:bg-vastu-dark group-hover:text-white'
-                                                    }`}>
-                                                    {lektion.isCompleted ? (
-                                                        <CheckCircle2 size={18} />
-                                                    ) : (
-                                                        <Play size={14} fill="currentColor" />
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-serif font-medium text-vastu-dark group-hover:text-vastu-dark transition-colors">
-                                                        {lektion.title}
-                                                    </h4>
-                                                    {lektion.description && (
-                                                        <p className="text-xs font-body text-vastu-text-light line-clamp-2 mt-0.5">
-                                                            {stripHtml(lektion.description)}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <ChevronRight size={18} className="text-vastu-sand group-hover:text-vastu-dark transition-colors shrink-0" />
-                                        </Link>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Materials Sidebar */}
-                        <div className="space-y-6">
-                            <div>
+                    {/* Lektionen Tab */}
+                    {activeTab === 'lektionen' && (
+                        <div className="grid md:grid-cols-3 gap-6">
+                            {/* Lessons List — with left accent bars */}
+                            <div className="md:col-span-2 space-y-4">
                                 <h3 className="font-serif text-lg text-vastu-dark mb-3 flex items-center gap-2">
-                                    <FileText className="text-vastu-gold" size={20} />
-                                    Materialien
+                                    <Play className="text-vastu-gold" size={20} />
+                                    Lektionen
                                 </h3>
-                                <div className="bg-vastu-cream/60 rounded-xl p-4 border border-vastu-sand/30 space-y-3">
-                                    {activeMod.moduleMaterials && activeMod.moduleMaterials.length > 0 ? (
-                                        activeMod.moduleMaterials.map((material) => (
-                                            <a
-                                                key={material.id}
-                                                href={material.url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-white transition-colors group"
+
+                                {activeMod.lektionen.length === 0 ? (
+                                    <div className="text-center py-6 text-vastu-text-light">
+                                        <p className="text-lg font-body mb-2">Noch keine Lektionen verfügbar</p>
+                                        <p className="text-sm font-sans">Die Inhalte werden bald freigeschaltet.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3 animate-stagger">
+                                        {activeMod.lektionen.map((lektion) => (
+                                            <Link
+                                                key={lektion.id}
+                                                to={`/student/module/${activeMod.id}/lektion/${lektion.id}`}
+                                                className={`flex items-center justify-between p-4 rounded-xl border transition-all group relative overflow-hidden ${lektion.isCompleted
+                                                    ? 'border-green-200 bg-green-50/30 hover:bg-green-50/60'
+                                                    : 'border-vastu-sand/50 hover:border-vastu-gold/40 hover:bg-vastu-cream/50'
+                                                    }`}
                                             >
-                                                <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0 group-hover:bg-red-100 transition-colors">
-                                                    <FileText size={14} className="text-red-500" />
-                                                </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="text-sm font-serif font-medium text-vastu-dark truncate group-hover:text-vastu-gold transition-colors">
-                                                        {material.title}
+                                                {/* Left accent bar */}
+                                                <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-xl transition-colors ${lektion.isCompleted ? 'bg-green-400' : 'bg-vastu-sand/50 group-hover:bg-vastu-gold'
+                                                    }`} />
+
+                                                <div className="flex items-center gap-4 pl-2">
+                                                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all ${lektion.isCompleted
+                                                        ? 'bg-green-100 text-green-600'
+                                                        : 'bg-vastu-cream text-vastu-dark group-hover:bg-vastu-dark group-hover:text-white'
+                                                        }`}>
+                                                        {lektion.isCompleted ? (
+                                                            <CheckCircle2 size={18} />
+                                                        ) : (
+                                                            <Play size={14} fill="currentColor" />
+                                                        )}
                                                     </div>
-                                                    <div className="text-[10px] font-sans text-vastu-text-light uppercase">
-                                                        {material.type}
+                                                    <div>
+                                                        <h4 className="font-serif font-medium text-vastu-dark group-hover:text-vastu-dark transition-colors">
+                                                            {lektion.title}
+                                                        </h4>
+                                                        {lektion.description && (
+                                                            <p className="text-xs font-body text-vastu-text-light line-clamp-2 mt-0.5">
+                                                                {stripHtml(lektion.description)}
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 </div>
-                                                <Download size={14} className="text-vastu-sand group-hover:text-vastu-dark transition-colors mt-1 shrink-0" />
-                                            </a>
-                                        ))
-                                    ) : (
-                                        <div className="text-sm font-body text-vastu-text-light italic text-center py-4">
-                                            Keine zusätzlichen Materialien
-                                        </div>
-                                    )}
+                                                <ChevronRight size={18} className="text-vastu-sand group-hover:text-vastu-dark transition-colors shrink-0" />
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Materials Sidebar */}
+                            <div className="space-y-6">
+                                <div>
+                                    <h3 className="font-serif text-lg text-vastu-dark mb-3 flex items-center gap-2">
+                                        <FileText className="text-vastu-gold" size={20} />
+                                        Materialien
+                                    </h3>
+                                    <div className="bg-vastu-cream/60 rounded-xl p-4 border border-vastu-sand/30 space-y-3">
+                                        {activeMod.moduleMaterials && activeMod.moduleMaterials.length > 0 ? (
+                                            activeMod.moduleMaterials.map((material) => (
+                                                <a
+                                                    key={material.id}
+                                                    href={material.url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-white transition-colors group"
+                                                >
+                                                    <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0 group-hover:bg-red-100 transition-colors">
+                                                        <FileText size={14} className="text-red-500" />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="text-sm font-serif font-medium text-vastu-dark truncate group-hover:text-vastu-gold transition-colors">
+                                                            {material.title}
+                                                        </div>
+                                                        <div className="text-[10px] font-sans text-vastu-text-light uppercase">
+                                                            {material.type}
+                                                        </div>
+                                                    </div>
+                                                    <Download size={14} className="text-vastu-sand group-hover:text-vastu-dark transition-colors mt-1 shrink-0" />
+                                                </a>
+                                            ))
+                                        ) : (
+                                            <div className="text-sm font-body text-vastu-text-light italic text-center py-4">
+                                                Keine zusätzlichen Materialien
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    )}
+
+                    {/* Materialien Tab */}
+                    {activeTab === 'materialien' && (
+                        <div>
+                            <h3 className="font-serif text-lg text-vastu-dark mb-3 flex items-center gap-2">
+                                <FileText className="text-vastu-gold" size={20} />
+                                Materialien
+                            </h3>
+                            <div className="bg-vastu-cream/60 rounded-xl p-4 border border-vastu-sand/30 space-y-3">
+                                {activeMod.moduleMaterials && activeMod.moduleMaterials.length > 0 ? (
+                                    activeMod.moduleMaterials.map((material) => (
+                                        <a
+                                            key={material.id}
+                                            href={material.url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-white transition-colors group"
+                                        >
+                                            <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0 group-hover:bg-red-100 transition-colors">
+                                                <FileText size={14} className="text-red-500" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="text-sm font-serif font-medium text-vastu-dark truncate group-hover:text-vastu-gold transition-colors">
+                                                    {material.title}
+                                                </div>
+                                                <div className="text-[10px] font-sans text-vastu-text-light uppercase">
+                                                    {material.type}
+                                                </div>
+                                            </div>
+                                            <Download size={14} className="text-vastu-sand group-hover:text-vastu-dark transition-colors mt-1 shrink-0" />
+                                        </a>
+                                    ))
+                                ) : (
+                                    <div className="text-sm font-body text-vastu-text-light italic text-center py-4">
+                                        Keine zusätzlichen Materialien
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Links Tab (Module 5 only) */}
+                    {activeTab === 'links' && hasLinks && (
+                        <div>
+                            <h3 className="font-serif text-lg text-vastu-dark mb-4 flex items-center gap-2">
+                                <ExternalLink className="text-vastu-gold" size={20} />
+                                Nützliche Links
+                            </h3>
+                            <p className="text-sm text-vastu-text-light font-body mb-6">
+                                Hier findest du empfohlene Links zu Vorhängen, Teppichen, Dekorationen und weiteren Vastu-relevanten Produkten.
+                            </p>
+                            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {MODULE_5_LINKS.map((link, idx) => (
+                                    <a
+                                        key={idx}
+                                        href={link.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="group flex flex-col p-5 rounded-xl border border-vastu-sand/40 bg-vastu-cream/30 hover:bg-white hover:border-vastu-gold/30 hover:shadow-md transition-all"
+                                    >
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="w-9 h-9 rounded-lg bg-vastu-dark/8 flex items-center justify-center shrink-0 group-hover:bg-vastu-gold/15 transition-colors">
+                                                <ExternalLink size={16} className="text-vastu-dark/60 group-hover:text-vastu-gold transition-colors" />
+                                            </div>
+                                            <h4 className="font-serif font-medium text-vastu-dark text-sm group-hover:text-vastu-gold transition-colors">
+                                                {link.title}
+                                            </h4>
+                                        </div>
+                                        {link.description && (
+                                            <p className="text-xs font-body text-vastu-text-light leading-relaxed">
+                                                {link.description}
+                                            </p>
+                                        )}
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

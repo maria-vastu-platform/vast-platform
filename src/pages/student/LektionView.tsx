@@ -1,5 +1,5 @@
-import { useParams, Link } from 'react-router-dom';
-import { FileText, Download, Loader2, BookOpen, CheckCircle2, ChevronRight, Home } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { FileText, Download, Loader2, BookOpen, CheckCircle2, ChevronRight, Home, ArrowLeft } from 'lucide-react';
 import { useLektion } from '../../hooks/useCourse';
 import VimeoPlayer from '../../components/VimeoPlayer';
 import { useState } from 'react';
@@ -8,6 +8,7 @@ export default function LektionView() {
     const { moduleId, lektionId } = useParams();
     const { lektion, loading, toggleComplete } = useLektion(moduleId, lektionId);
     const [justCompleted, setJustCompleted] = useState(false);
+    const navigate = useNavigate();
 
     if (loading) {
         return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-vastu-gold" size={40} /></div>;
@@ -35,6 +36,15 @@ export default function LektionView() {
 
     return (
         <div className="animate-fade-in space-y-6">
+            {/* Back Button */}
+            <button
+                onClick={() => navigate(-1)}
+                className="inline-flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors group text-sm font-sans"
+            >
+                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                <span>Zurück</span>
+            </button>
+
             {/* Breadcrumb Navigation */}
             <nav className="flex items-center gap-2 text-sm font-sans text-vastu-text-light">
                 <Link to="/student" className="hover:text-vastu-dark transition-colors flex items-center gap-1">

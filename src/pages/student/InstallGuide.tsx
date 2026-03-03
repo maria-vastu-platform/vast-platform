@@ -1,16 +1,17 @@
 import { Smartphone, Monitor, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export default function InstallGuide() {
+    const navigate = useNavigate();
     return (
         <div className="animate-fade-in space-y-6">
-            <Link
-                to="/student/welcome"
+            <button
+                onClick={() => navigate(-1)}
                 className="inline-flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors group"
             >
                 <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
                 <span>Zurück</span>
-            </Link>
+            </button>
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="bg-vastu-accent p-8 md:p-10 relative overflow-hidden">
