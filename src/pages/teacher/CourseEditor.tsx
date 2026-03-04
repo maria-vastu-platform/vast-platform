@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Plus, Trash2, ChevronDown, ChevronRight, FileText, Video, X, Save, Loader2, ArrowUp, ArrowDown } from 'lucide-react';
 import FileUploader from '../../components/FileUploader';
+import AddLinkModal from '../../components/AddLinkModal';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -50,6 +51,7 @@ const LektionEditor = ({ lektion, onDelete, onUpdate, onMoveUp, onMoveDown, isFi
     const [local, setLocal] = useState(lektion);
     const [saving, setSaving] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
+    const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
 
     useEffect(() => {
         setLocal(lektion);
@@ -231,16 +233,19 @@ const LektionEditor = ({ lektion, onDelete, onUpdate, onMoveUp, onMoveDown, isFi
                         compact
                     />
                     <button
-                        onClick={() => {
-                            const url = window.prompt('URL:');
-                            if (url) handleAddMaterial(url, 'link', window.prompt('Bezeichnung:', 'Link') || 'Link', false);
-                        }}
+                        onClick={() => setIsLinkModalOpen(true)}
                         className="px-3 py-2 border border-dashed border-gray-300 rounded-lg text-xs text-gray-500 hover:border-vastu-accent hover:text-vastu-accent"
                     >
                         + Link
                     </button>
                 </div>
             </div>
+
+            <AddLinkModal
+                isOpen={isLinkModalOpen}
+                onClose={() => setIsLinkModalOpen(false)}
+                onAdd={(url, formattedTitle) => handleAddMaterial(url, 'link', formattedTitle, false)}
+            />
         </div>
     );
 };
@@ -259,6 +264,7 @@ const ModulEditor = ({ modul, onDelete, onUpdate, onAddLektion, onMoveUp, onMove
     const [localModul, setLocalModul] = useState(modul);
     const [saving, setSaving] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
+    const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
 
     useEffect(() => {
         setLocalModul(modul);
@@ -384,18 +390,19 @@ const ModulEditor = ({ modul, onDelete, onUpdate, onAddLektion, onMoveUp, onMove
                             onUploadComplete={(url, type, name) => handleAddMaterial(url, type, name)}
                         />
                         <button
-                            onClick={() => {
-                                const url = window.prompt('Link-URL eingeben:');
-                                if (!url) return;
-                                const name = window.prompt('Bezeichnung:', 'Zusatzmaterial');
-                                if (!name) return;
-                                handleAddMaterial(url, 'link', name);
-                            }}
+                            onClick={() => setIsLinkModalOpen(true)}
                             className="w-full mt-2 py-3 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 text-gray-500 hover:text-vastu-dark hover:border-vastu-accent hover:bg-vastu-accent/5 transition-all font-medium text-sm"
                         >
                             <Plus size={16} /> Link hinzufügen
                         </button>
                     </div>
+
+                    <AddLinkModal
+                        isOpen={isLinkModalOpen}
+                        onClose={() => setIsLinkModalOpen(false)}
+                        onAdd={(url, formattedTitle) => handleAddMaterial(url, 'link', formattedTitle)}
+                        title="Link zum Modul hinzufügen"
+                    />
 
                     {/* Lektionen */}
                     <div className="mt-8">

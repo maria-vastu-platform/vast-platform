@@ -147,6 +147,13 @@ export async function downloadFile(url: string, filename: string) {
     } catch (error) {
         console.error('Download failed:', error);
         // Fallback to direct link
-        window.open(url, '_blank');
     }
+}
+
+export function parseCategorizedLink(rawTitle: string): { category: string; title: string } {
+    const match = rawTitle.match(/^\[(.*?)\]\s*(.*)$/);
+    if (match) {
+        return { category: match[1].trim(), title: match[2].trim() };
+    }
+    return { category: 'Allgemein', title: rawTitle.trim() };
 }

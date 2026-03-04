@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-import { User, Camera, Save, Lock, Loader2, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { User, Camera, Save, Lock, Loader2, X, ZoomIn, ZoomOut, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '../../lib/utils';
 
 export default function Profile() {
     const { user, loading: authLoading } = useAuth();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
@@ -115,6 +117,15 @@ export default function Profile() {
 
     return (
         <div className="max-w-2xl mx-auto space-y-8 animate-fade-in relative">
+            {/* Back Navigation */}
+            <button
+                onClick={() => navigate(-1)}
+                className="inline-flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors group text-sm font-sans"
+            >
+                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                <span>Zurück</span>
+            </button>
+
             <div>
                 <h1 className="text-3xl font-serif text-vastu-dark mb-2">Mein Profil</h1>
                 <p className="text-vastu-text-light">Persönliche Daten und Kontoeinstellungen verwalten.</p>

@@ -1,6 +1,8 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { FileText, Download, Loader2, BookOpen, CheckCircle2, ChevronRight, Home, ArrowLeft } from 'lucide-react';
+import { FileText, Download, Loader2, BookOpen, CheckCircle2, ChevronRight, Home, ArrowLeft, ExternalLink } from 'lucide-react';
 import { useLektion } from '../../hooks/useCourse';
+import { parseCategorizedLink } from '../../lib/utils';
+import { Material } from '../../lib/types';
 import VimeoPlayer from '../../components/VimeoPlayer';
 import { useState } from 'react';
 
@@ -24,7 +26,23 @@ export default function LektionView() {
     }
 
     const pdfMaterials = lektion.materials.filter(m => m.type === 'pdf');
-    const otherMaterials = lektion.materials.filter(m => m.type !== 'pdf');
+
+    const parsedLinks = lektion.materials
+        .filter(m => m.type === 'link')
+        .map(m => {
+            const { category, title } = parseCategorizedLink(m.title);
+            return { ...m, category, cleanTitle: title };
+        });
+
+    type ParsedLink = Material & { category: string; cleanTitle: string };
+
+    const linksByCategory = parsedLinks.reduce((acc: Record<string, ParsedLink[]>, link: ParsedLink) => {
+        if (!acc[link.category]) acc[link.category] = [];
+        acc[link.category].push(link);
+        return acc;
+    }, {});
+
+    const otherMaterials = lektion.materials.filter(m => m.type !== 'pdf' && m.type !== 'link');
 
     const handleToggleComplete = (val: boolean) => {
         toggleComplete(val);
@@ -164,6 +182,46 @@ export default function LektionView() {
                                 <span className="text-sm font-serif font-medium text-vastu-dark">{mat.title}</span>
                                 <span className="text-[10px] font-sans text-vastu-text-light uppercase ml-auto">{mat.type}</span>
                             </a>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Categorized Links */}
+            {parsedLinks.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 p-6 md:p-8">
+                    <h3 className="font-serif text-xl text-vastu-dark mb-6 flex items-center gap-2">
+                        <ExternalLink className="text-vastu-gold" size={20} />
+                        Nützliche Links
+                    </h3>
+
+                    <div className="space-y-8">
+                        {Object.entries(linksByCategory).map(([category, links]) => (
+                            <div key={category}>
+                                <h4 className="font-serif font-medium text-vastu-dark mb-4 border-b border-vastu-sand/30 pb-2">
+                                    {category}
+                                </h4>
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                    {(links as ParsedLink[]).map((link) => (
+                                        <a
+                                            key={link.id}
+                                            href={link.url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="group flex flex-col p-4 rounded-xl border border-vastu-sand/40 bg-vastu-cream/30 hover:bg-white hover:border-vastu-gold/30 hover:shadow-md transition-all"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-vastu-dark/8 flex items-center justify-center shrink-0 group-hover:bg-vastu-gold/15 transition-colors">
+                                                    <ExternalLink size={14} className="text-vastu-dark/60 group-hover:text-vastu-gold transition-colors" />
+                                                </div>
+                                                <h4 className="font-serif font-medium text-vastu-dark text-sm group-hover:text-vastu-gold transition-colors">
+                                                    {link.cleanTitle}
+                                                </h4>
+                                            </div>
+                                        </a>
+                                    ))}
+                                </div>
+                            </div>
                         ))}
                     </div>
                 </div>

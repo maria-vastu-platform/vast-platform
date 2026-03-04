@@ -68,7 +68,7 @@ export interface StreamComment {
     created_at: string;
 }
 
-export type LibraryCategory = 'slides' | 'bonus' | 'guide' | 'template';
+export type LibraryCategory = 'slides' | 'bonus' | 'guide' | 'template' | 'links';
 
 export interface LibraryItem {
     id: string;

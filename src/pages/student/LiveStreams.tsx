@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { LiveStream } from '../../lib/types';
-import { Calendar, Clock, Video, Youtube } from 'lucide-react';
+import { Calendar, Clock, Video, Youtube, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { cn, getVideoEmbedUrl } from '../../lib/utils';
 
 // Helper component for dual video player
@@ -73,6 +74,7 @@ export default function LiveStreams() {
     const [streams, setStreams] = useState<LiveStream[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState<string>('all');
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchStreams();
@@ -108,6 +110,15 @@ export default function LiveStreams() {
 
     return (
         <div className="space-y-12 animate-fade-in">
+            {/* Back Navigation */}
+            <button
+                onClick={() => navigate(-1)}
+                className="inline-flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors group text-sm font-sans mb-6"
+            >
+                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                <span>Zurück</span>
+            </button>
+
             {/* Header */}
             <div>
                 <h1 className="font-serif text-3xl text-vastu-dark mb-2">Прямые Эфиры</h1>

@@ -1,4 +1,4 @@
-import { FileText, Download, Loader2, BookOpen, Presentation, Gift, BookMarked, ArrowLeft } from 'lucide-react';
+import { FileText, Download, Loader2, BookOpen, Presentation, Gift, BookMarked, ArrowLeft, ExternalLink } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -9,6 +9,7 @@ const CATEGORIES: { key: LibraryCategory | 'all'; label: string; icon: any }[] =
     { key: 'slides', label: 'Folien', icon: Presentation },
     { key: 'bonus', label: 'Bonus', icon: Gift },
     { key: 'guide', label: 'Leitfaden', icon: BookMarked },
+    { key: 'links', label: 'Links', icon: ExternalLink },
 ];
 
 export default function Library() {
@@ -86,6 +87,7 @@ export default function Library() {
             case 'bonus': return 'bg-amber-50 text-amber-600 border-amber-100';
             case 'guide': return 'bg-blue-50 text-blue-600 border-blue-100';
             case 'template': return 'bg-green-50 text-green-600 border-green-100';
+            case 'links': return 'bg-teal-50 text-teal-600 border-teal-100';
             default: return 'bg-gray-50 text-gray-600 border-gray-100';
         }
     };
@@ -95,6 +97,7 @@ export default function Library() {
             case 'slides': return <Presentation size={20} className="text-purple-500" />;
             case 'bonus': return <Gift size={20} className="text-amber-500" />;
             case 'guide': return <BookMarked size={20} className="text-blue-500" />;
+            case 'links': return <ExternalLink size={20} className="text-teal-500" />;
             default: return <FileText size={20} className="text-gray-500" />;
         }
     };
@@ -187,7 +190,47 @@ export default function Library() {
                             <p className="text-lg font-body">Noch keine Materialien verfügbar</p>
                             <p className="text-sm font-sans mt-1">Die Bibliothek wird im Laufe des Kurses gefüllt.</p>
                         </div>
+                    ) : activeCategory === 'links' ? (
+                        // Grouped links view
+                        <div className="space-y-8 animate-stagger">
+                            {Object.entries(
+                                filteredItems.reduce((acc: Record<string, typeof filteredItems>, item) => {
+                                    const group = item.description || 'Allgemein';
+                                    if (!acc[group]) acc[group] = [];
+                                    acc[group].push(item);
+                                    return acc;
+                                }, {})
+                            ).map(([groupName, groupItems]) => (
+                                <div key={groupName}>
+                                    <h4 className="font-serif text-lg text-vastu-dark mb-4 border-b border-vastu-sand/30 pb-2">
+                                        {groupName}
+                                    </h4>
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        {groupItems.map((item) => (
+                                            <a
+                                                key={item.id}
+                                                href={item.file_url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="flex items-center gap-3 p-4 bg-vastu-cream/30 rounded-xl border border-vastu-sand/30 hover:border-vastu-gold/30 hover:shadow-md transition-all group"
+                                            >
+                                                <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-vastu-dark/5 group-hover:bg-vastu-gold/15 transition-colors">
+                                                    <ExternalLink size={18} className="text-vastu-dark/50 group-hover:text-vastu-gold transition-colors" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-serif font-medium text-vastu-dark group-hover:text-vastu-gold transition-colors truncate">
+                                                        {item.title}
+                                                    </div>
+                                                </div>
+                                                <ExternalLink size={16} className="text-vastu-sand group-hover:text-vastu-dark transition-colors shrink-0" />
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     ) : (
+                        // Standard grid view for PDFs/Materials
                         <div className="grid gap-4 md:grid-cols-2 animate-stagger">
                             {filteredItems.map((item) => (
                                 <a

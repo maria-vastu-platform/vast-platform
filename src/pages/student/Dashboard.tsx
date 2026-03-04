@@ -2,23 +2,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Play, ChevronRight, FileText, Loader2, CheckCircle2, Download, Lock, Gift, Video, ArrowLeft, ExternalLink } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useModules } from '../../hooks/useCourse';
+import { parseCategorizedLink } from '../../lib/utils';
 import { supabase } from '../../lib/supabase';
-
-// Placeholder links for Module 5 — Maria will provide real URLs later
-const MODULE_5_LINKS = [
-    { title: 'Vorhänge & Gardinen', url: '#', description: 'Empfehlungen für Vorhänge nach Vastu-Prinzipien' },
-    { title: 'Teppiche', url: '#', description: 'Teppiche für verschiedene Räume und Sektoren' },
-    { title: 'Dekoration & Accessoires', url: '#', description: 'Dekorationselemente für harmonische Räume' },
-    { title: 'Farben & Materialien', url: '#', description: 'Farbpaletten und Materialien nach Vastu' },
-    { title: 'Möbel & Einrichtung', url: '#', description: 'Möbelempfehlungen für jeden Sektor' },
-    { title: 'Beleuchtung', url: '#', description: 'Lichtkonzepte nach Vastu-Prinzipien' },
-];
-
-const stripHtml = (html: string) => {
-    const tmp = document.createElement('DIV');
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || '';
-};
+import { Material } from '../../lib/types';
 
 // Extract module number for decorative badge
 function getModuleNumber(id: string): string {
@@ -27,6 +13,12 @@ function getModuleNumber(id: string): string {
     const match = id.match(/m(\d+)/);
     return match ? match[1].padStart(2, '0') : '';
 }
+
+const stripHtml = (html: string) => {
+    const tmp = document.createElement('DIV');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+};
 
 export default function StudentDashboard() {
     const { modules, loading, error: _modulesError } = useModules();
@@ -82,7 +74,24 @@ export default function StudentDashboard() {
         }
     };
 
-    const hasLinks = activeMod.id === 'm5';
+    const parsedLinks = activeMod.moduleMaterials
+        ?.filter((m: Material) => m.type === 'link')
+        .map((m: Material) => {
+            const { category, title } = parseCategorizedLink(m.title);
+            return { ...m, category, cleanTitle: title };
+        }) || [];
+
+    const hasLinks = parsedLinks.length > 0;
+
+    const regularMaterials = activeMod.moduleMaterials?.filter((m: Material) => m.type !== 'link') || [];
+
+    type ParsedLink = Material & { category: string; cleanTitle: string };
+
+    const linksByCategory = parsedLinks.reduce((acc: Record<string, ParsedLink[]>, link: ParsedLink) => {
+        if (!acc[link.category]) acc[link.category] = [];
+        acc[link.category].push(link);
+        return acc;
+    }, {});
 
     return (
         <div className="animate-fade-in space-y-4">
@@ -290,9 +299,7 @@ export default function StudentDashboard() {
                                                             {lektion.title}
                                                         </h4>
                                                         {lektion.description && (
-                                                            <p className="text-xs font-body text-vastu-text-light line-clamp-2 mt-0.5">
-                                                                {stripHtml(lektion.description)}
-                                                            </p>
+                                                            <p className="text-xs font-body text-vastu-text-light line-clamp-2 mt-0.5" dangerouslySetInnerHTML={{ __html: lektion.description }} />
                                                         )}
                                                     </div>
                                                 </div>
@@ -311,8 +318,8 @@ export default function StudentDashboard() {
                                         Materialien
                                     </h3>
                                     <div className="bg-vastu-cream/60 rounded-xl p-4 border border-vastu-sand/30 space-y-3">
-                                        {activeMod.moduleMaterials && activeMod.moduleMaterials.length > 0 ? (
-                                            activeMod.moduleMaterials.map((material) => (
+                                        {regularMaterials.length > 0 ? (
+                                            regularMaterials.map((material) => (
                                                 <a
                                                     key={material.id}
                                                     href={material.url}
@@ -353,8 +360,8 @@ export default function StudentDashboard() {
                                 Materialien
                             </h3>
                             <div className="bg-vastu-cream/60 rounded-xl p-4 border border-vastu-sand/30 space-y-3">
-                                {activeMod.moduleMaterials && activeMod.moduleMaterials.length > 0 ? (
-                                    activeMod.moduleMaterials.map((material) => (
+                                {regularMaterials.length > 0 ? (
+                                    regularMaterials.map((material) => (
                                         <a
                                             key={material.id}
                                             href={material.url}
@@ -385,7 +392,7 @@ export default function StudentDashboard() {
                         </div>
                     )}
 
-                    {/* Links Tab (Module 5 only) */}
+                    {/* Links Tab */}
                     {activeTab === 'links' && hasLinks && (
                         <div>
                             <h3 className="font-serif text-lg text-vastu-dark mb-4 flex items-center gap-2">
@@ -393,31 +400,36 @@ export default function StudentDashboard() {
                                 Nützliche Links
                             </h3>
                             <p className="text-sm text-vastu-text-light font-body mb-6">
-                                Hier findest du empfohlene Links zu Vorhängen, Teppichen, Dekorationen und weiteren Vastu-relevanten Produkten.
+                                Hier findest du empfohlene Links und zusätzliche Ressourcen zu diesem Modul.
                             </p>
-                            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {MODULE_5_LINKS.map((link, idx) => (
-                                    <a
-                                        key={idx}
-                                        href={link.url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="group flex flex-col p-5 rounded-xl border border-vastu-sand/40 bg-vastu-cream/30 hover:bg-white hover:border-vastu-gold/30 hover:shadow-md transition-all"
-                                    >
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <div className="w-9 h-9 rounded-lg bg-vastu-dark/8 flex items-center justify-center shrink-0 group-hover:bg-vastu-gold/15 transition-colors">
-                                                <ExternalLink size={16} className="text-vastu-dark/60 group-hover:text-vastu-gold transition-colors" />
-                                            </div>
-                                            <h4 className="font-serif font-medium text-vastu-dark text-sm group-hover:text-vastu-gold transition-colors">
-                                                {link.title}
-                                            </h4>
+
+                            <div className="space-y-8">
+                                {Object.entries(linksByCategory).map(([category, links]) => (
+                                    <div key={category}>
+                                        <h4 className="font-serif font-medium text-vastu-dark mb-4 border-b border-vastu-sand/30 pb-2">
+                                            {category}
+                                        </h4>
+                                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {links.map((link) => (
+                                                <a
+                                                    key={link.id}
+                                                    href={link.url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="group flex flex-col p-5 rounded-xl border border-vastu-sand/40 bg-vastu-cream/30 hover:bg-white hover:border-vastu-gold/30 hover:shadow-md transition-all"
+                                                >
+                                                    <div className="flex items-center gap-3 mb-2">
+                                                        <div className="w-9 h-9 rounded-lg bg-vastu-dark/8 flex items-center justify-center shrink-0 group-hover:bg-vastu-gold/15 transition-colors">
+                                                            <ExternalLink size={16} className="text-vastu-dark/60 group-hover:text-vastu-gold transition-colors" />
+                                                        </div>
+                                                        <h4 className="font-serif font-medium text-vastu-dark text-sm group-hover:text-vastu-gold transition-colors">
+                                                            {link.cleanTitle}
+                                                        </h4>
+                                                    </div>
+                                                </a>
+                                            ))}
                                         </div>
-                                        {link.description && (
-                                            <p className="text-xs font-body text-vastu-text-light leading-relaxed">
-                                                {link.description}
-                                            </p>
-                                        )}
-                                    </a>
+                                    </div>
                                 ))}
                             </div>
                         </div>

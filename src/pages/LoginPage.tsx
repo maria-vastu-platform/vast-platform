@@ -61,8 +61,8 @@ export default function LoginPage() {
             <div className="w-full max-w-md relative z-10 animate-fade-in">
                 {/* Brand */}
                 <div className="text-center mb-10">
-                    <div className="w-18 h-18 mx-auto mb-5 relative">
-                        <img src="/logo.png" alt="Academy" className="w-[72px] h-[72px] mx-auto object-contain" />
+                    <div className="w-24 h-24 mx-auto mb-6 relative">
+                        <img src="/logo.png" alt="Academy" className="w-[96px] h-[96px] mx-auto object-contain drop-shadow-xl" />
                     </div>
                     <h1 className="text-3xl font-serif tracking-[0.15em] text-vastu-dark">VASTULOGIE</h1>
                     <p className="font-script text-vastu-gold text-xl mt-1">Ausbildung</p>

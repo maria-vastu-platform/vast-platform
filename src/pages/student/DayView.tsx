@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Download, FileText, Video, File, ChevronRight, ChevronLeft, Loader2, Youtube } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Download, FileText, Video, File, ChevronRight, ChevronLeft, Loader2, Youtube, ArrowLeft } from 'lucide-react';
 import { useModules, useLektion } from '../../hooks/useCourse';
 import { Module, Lektion, Material } from '../../lib/types';
 import { getVideoEmbedUrl, cn } from '../../lib/utils';
@@ -74,6 +74,7 @@ const VideoPlayer = ({ youtubeUrl, rutubeUrl, title }: { youtubeUrl?: string, ru
 export default function DayView() {
     const { weekId, dayId } = useParams();
     const [downloadingId, setDownloadingId] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     // We need modules to find prev/next lektion
     const { modules } = useModules();
@@ -134,6 +135,15 @@ export default function DayView() {
 
     return (
         <div className="max-w-6xl mx-auto animate-fade-in">
+            {/* Back Navigation */}
+            <button
+                onClick={() => navigate(-1)}
+                className="inline-flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors group text-sm font-sans mb-6"
+            >
+                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                <span>Zurück</span>
+            </button>
+
             {/* Breadcrumbs */}
             <div className="flex items-center gap-2 text-sm text-vastu-text-light mb-6">
                 <Link to="/student" className="hover:text-vastu-gold">Kurs</Link>

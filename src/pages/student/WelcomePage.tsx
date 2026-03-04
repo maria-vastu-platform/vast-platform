@@ -1,10 +1,11 @@
-import { ExternalLink, Play, Calendar, Video, MessageCircle, Star, ArrowRight, BookOpen, Library, Smartphone, LogOut, Map } from 'lucide-react';
-import { Link, Navigate } from 'react-router-dom';
+import { ExternalLink, Play, Calendar, Video, MessageCircle, Star, ArrowRight, BookOpen, Library, Smartphone, LogOut, Map, ArrowLeft } from 'lucide-react';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useModules } from '../../hooks/useCourse';
 
 export default function WelcomePage() {
     const { user, signOut, loading } = useAuth();
+    const navigate = useNavigate();
     const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Teilnehmer';
     const { modules } = useModules();
 
@@ -22,14 +23,21 @@ export default function WelcomePage() {
             {/* Top navigation bar */}
             <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-vastu-sand/40">
                 <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <Link to="/student/welcome" className="flex items-center gap-3">
-                        <img src="/logo.png" alt="Academy" className="w-10 h-10 object-contain" />
+                    <Link to="/student/welcome" className="flex items-center gap-4">
+                        <img src="/logo.png" alt="Academy" className="w-12 h-12 object-contain drop-shadow-md" />
                         <div className="flex flex-col">
                             <span className="font-serif text-sm tracking-[0.12em] text-vastu-dark leading-none">VASTULOGIE</span>
                             <span className="font-script text-vastu-gold text-xs">Ausbildung</span>
                         </div>
                     </Link>
                     <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="hidden sm:flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors mr-4 group text-sm font-sans"
+                        >
+                            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                            <span>Zurück</span>
+                        </button>
                         <span className="text-sm font-sans text-vastu-text-light hidden sm:block">{displayName}</span>
                         <button onClick={() => signOut()} className="text-vastu-text-light hover:text-vastu-dark transition-colors">
                             <LogOut size={18} />

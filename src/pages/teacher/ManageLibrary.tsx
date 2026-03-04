@@ -130,6 +130,7 @@ export default function ManageLibrary() {
         { id: 'slides', label: 'Folien' },
         { id: 'bonus', label: 'Bonus' },
         { id: 'guide', label: 'Leitfaden' },
+        { id: 'links', label: 'Links' },
     ];
 
     if (loading) return <div className="p-8">Laden...</div>;
@@ -360,13 +361,24 @@ export default function ManageLibrary() {
                                 )}
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Beschreibung (optional)</label>
-                                <textarea rows={3} value={formData.description}
-                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                    className="w-full rounded-lg border-gray-300 focus:ring-vastu-dark focus:border-vastu-dark"
-                                    placeholder="Kurze Beschreibung..." />
-                            </div>
+                            {formData.category === 'links' ? (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Kategorie / Gruppe (optional)</label>
+                                    <input type="text" value={formData.description}
+                                        onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                        className="w-full rounded-lg border-gray-300 focus:ring-vastu-dark focus:border-vastu-dark"
+                                        placeholder="z.B. Vorhänge, Teppiche..." />
+                                    <p className="text-xs text-gray-500 mt-1">Hilft dabei, Links in der Bibliothek zu gruppieren.</p>
+                                </div>
+                            ) : (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Beschreibung (optional)</label>
+                                    <textarea rows={3} value={formData.description}
+                                        onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                        className="w-full rounded-lg border-gray-300 focus:ring-vastu-dark focus:border-vastu-dark"
+                                        placeholder="Kurze Beschreibung..." />
+                                </div>
+                            )}
 
                             <div className="pt-4 border-t border-gray-100 flex justify-end gap-3">
                                 <button type="button" onClick={() => setIsEditing(false)}

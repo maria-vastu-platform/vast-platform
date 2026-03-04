@@ -46,9 +46,9 @@ export default function StudentLayout() {
             >
                 {/* Brand Header */}
                 <div className="p-6 border-b border-vastu-dark/10">
-                    <Link to="/student/welcome" className="flex items-center gap-3 group">
+                    <Link to="/student/welcome" className="flex items-center gap-4 group">
                         {/* Logo */}
-                        <img src="/logo.png" alt="Academy" className="w-11 h-11 object-contain transition-transform group-hover:scale-110" />
+                        <img src="/logo.png" alt="Academy" className="w-14 h-14 object-contain transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-lg drop-shadow-md" />
                         <div className="flex flex-col">
                             <span className="font-serif text-[17px] tracking-[0.15em] text-vastu-dark leading-none">VASTULOGIE</span>
                             <span className="font-script text-vastu-dark/70 text-sm mt-1">Ausbildung</span>
@@ -156,8 +156,9 @@ export default function StudentLayout() {
 
             {/* Mobile Header */}
             <header className="md:hidden bg-sidebar-gradient fixed top-0 w-full z-50 shadow-md h-16 flex items-center justify-between px-4">
-                <Link to="/student/welcome" className="flex items-center gap-2">
-                    <img src="/logo.png" alt="Academy" className="w-9 h-9 object-contain" />
+                {/* Brand */}
+                <Link to="/student/welcome" className="flex items-center gap-3">
+                    <img src="/logo.png" alt="Academy" className="w-11 h-11 object-contain drop-shadow-sm" />
                     <div className="flex flex-col">
                         <span className="font-serif text-sm tracking-[0.12em] text-vastu-dark leading-none">VASTULOGIE</span>
                         <span className="font-script text-vastu-dark/70 text-xs">Ausbildung</span>
