@@ -79,6 +79,7 @@ export interface LibraryItem {
     created_at: string;
     file_type?: string;
     is_master_file?: boolean;
+    available_from?: string;
 }
 
 export interface Review {

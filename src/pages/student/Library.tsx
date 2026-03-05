@@ -1,4 +1,4 @@
-import { FileText, Download, Loader2, BookOpen, Presentation, Gift, BookMarked, ArrowLeft, ExternalLink } from 'lucide-react';
+import { FileText, Download, Loader2, BookOpen, Presentation, Gift, BookMarked, ArrowLeft, ExternalLink, Lock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -30,6 +30,7 @@ export default function Library() {
                             file_url: '#',
                             description: 'Vollständige Sammlung aller Präsentationsfolien der Ausbildung',
                             created_at: new Date().toISOString(),
+                            available_from: '2026-04-15T00:00:00Z',
                         },
                         {
                             id: 'lib2',
@@ -147,15 +148,22 @@ export default function Library() {
                                 <h3 className="font-serif text-xl md:text-2xl text-vastu-dark mb-2">{masterFile.title}</h3>
                                 <p className="text-vastu-text-light text-sm max-w-xl">{masterFile.description || 'Das vollständige Kursmaterial zum Herunterladen.'}</p>
                             </div>
-                            <a
-                                href={masterFile.file_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="bg-vastu-dark text-white px-8 py-3 rounded-lg font-medium flex items-center gap-2 hover:bg-vastu-dark/90 transition-colors shadow-md whitespace-nowrap"
-                            >
-                                <Download size={20} />
-                                <span>Herunterladen</span>
-                            </a>
+                            {masterFile.available_from && new Date(masterFile.available_from) > new Date() ? (
+                                <div className="bg-vastu-cream/80 text-vastu-text-light px-6 py-3 rounded-lg font-medium flex items-center gap-2 shadow-sm whitespace-nowrap cursor-not-allowed">
+                                    <Lock size={18} />
+                                    <span className="text-sm">Ab {new Date(masterFile.available_from).toLocaleDateString('de-DE')}</span>
+                                </div>
+                            ) : (
+                                <a
+                                    href={masterFile.file_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="bg-vastu-dark text-white px-8 py-3 rounded-lg font-medium flex items-center gap-2 hover:bg-vastu-dark/90 transition-colors shadow-md whitespace-nowrap"
+                                >
+                                    <Download size={20} />
+                                    <span>Herunterladen</span>
+                                </a>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -232,29 +240,56 @@ export default function Library() {
                     ) : (
                         // Standard grid view for PDFs/Materials
                         <div className="grid gap-4 md:grid-cols-2 animate-stagger">
-                            {filteredItems.map((item) => (
-                                <a
-                                    key={item.id}
-                                    href={item.file_url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="pdf-card flex items-start gap-4 p-5 bg-vastu-cream/40 rounded-xl border border-vastu-sand/30 hover:border-vastu-gold/30 hover:bg-vastu-cream/70 group"
-                                >
-                                    <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-white border border-vastu-sand/30 group-hover:shadow-sm transition-all">
-                                        {getCategoryIcon(item.category)}
+                            {filteredItems.map((item) => {
+                                const isLocked = item.available_from && new Date(item.available_from) > new Date();
+
+                                return isLocked ? (
+                                    <div
+                                        key={item.id}
+                                        className="pdf-card flex items-start gap-4 p-5 bg-vastu-cream/40 rounded-xl border border-vastu-sand/30 opacity-70 group cursor-not-allowed"
+                                    >
+                                        <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-white border border-vastu-sand/30">
+                                            <Lock size={18} className="text-vastu-text-light/50" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-serif font-medium text-vastu-dark mb-1">{item.title}</div>
+                                            {item.description && (
+                                                <p className="text-sm font-body text-vastu-text-light line-clamp-2 mb-2">{item.description}</p>
+                                            )}
+                                            <div className="flex items-center gap-2">
+                                                <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-sans font-medium uppercase border ${getCategoryColor(item.category)}`}>
+                                                    {CATEGORIES.find(c => c.key === item.category)?.label || item.category}
+                                                </span>
+                                                <div className="text-xs font-sans text-vastu-text-light font-medium flex items-center gap-1 bg-white px-2 py-0.5 rounded-md shadow-sm border border-vastu-sand/40">
+                                                    Ab {new Date(item.available_from!).toLocaleDateString('de-DE')}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="font-serif font-medium text-vastu-dark mb-1 group-hover:text-vastu-gold transition-colors">{item.title}</div>
-                                        {item.description && (
-                                            <p className="text-sm font-body text-vastu-text-light line-clamp-2 mb-2">{item.description}</p>
-                                        )}
-                                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-sans font-medium uppercase border ${getCategoryColor(item.category)}`}>
-                                            {CATEGORIES.find(c => c.key === item.category)?.label || item.category}
-                                        </span>
-                                    </div>
-                                    <Download size={18} className="text-vastu-sand group-hover:text-vastu-dark transition-colors shrink-0 mt-1" />
-                                </a>
-                            ))}
+                                ) : (
+                                    <a
+                                        key={item.id}
+                                        href={item.file_url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="pdf-card flex items-start gap-4 p-5 bg-vastu-cream/40 rounded-xl border border-vastu-sand/30 hover:border-vastu-gold/30 hover:bg-vastu-cream/70 group transition-all"
+                                    >
+                                        <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-white border border-vastu-sand/30 group-hover:shadow-sm transition-all">
+                                            {getCategoryIcon(item.category)}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-serif font-medium text-vastu-dark mb-1 group-hover:text-vastu-gold transition-colors">{item.title}</div>
+                                            {item.description && (
+                                                <p className="text-sm font-body text-vastu-text-light line-clamp-2 mb-2">{item.description}</p>
+                                            )}
+                                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-sans font-medium uppercase border ${getCategoryColor(item.category)}`}>
+                                                {CATEGORIES.find(c => c.key === item.category)?.label || item.category}
+                                            </span>
+                                        </div>
+                                        <Download size={18} className="text-vastu-sand group-hover:text-vastu-dark transition-colors shrink-0 mt-1" />
+                                    </a>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
