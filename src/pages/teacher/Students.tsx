@@ -5,7 +5,7 @@ import { Loader2, Search, Mail, User } from 'lucide-react';
 interface StudentProfile {
     id: string;
     email: string;
-    full_name: string | null;
+    name: string | null;
     created_at: string;
     kohorte_id?: string;
 }
@@ -26,10 +26,10 @@ export default function Students() {
             try {
                 if (!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('placeholder')) {
                     setStudents([
-                        { id: '1', full_name: 'Anna Schneider', email: 'anna@beispiel.de', created_at: '2026-02-10T10:00:00Z', kohorte_id: 'k1' },
-                        { id: '2', full_name: 'Lisa Müller', email: 'lisa@beispiel.de', created_at: '2026-02-12T14:30:00Z', kohorte_id: 'k1' },
-                        { id: '3', full_name: 'Sophie Wagner', email: 'sophie@beispiel.de', created_at: '2026-02-15T09:15:00Z', kohorte_id: 'k1' },
-                        { id: '4', full_name: 'Julia Fischer', email: 'julia@beispiel.de', created_at: '2026-02-18T11:45:00Z', kohorte_id: 'k2' },
+                        { id: '1', name: 'Anna Schneider', email: 'anna@beispiel.de', created_at: '2026-02-10T10:00:00Z', kohorte_id: 'k1' },
+                        { id: '2', name: 'Lisa Müller', email: 'lisa@beispiel.de', created_at: '2026-02-12T14:30:00Z', kohorte_id: 'k1' },
+                        { id: '3', name: 'Sophie Wagner', email: 'sophie@beispiel.de', created_at: '2026-02-15T09:15:00Z', kohorte_id: 'k1' },
+                        { id: '4', name: 'Julia Fischer', email: 'julia@beispiel.de', created_at: '2026-02-18T11:45:00Z', kohorte_id: 'k2' },
                     ]);
                     setLoading(false);
                     return;
@@ -68,7 +68,7 @@ export default function Students() {
     };
 
     const filtered = students.filter(s => {
-        const matchesSearch = (s.full_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        const matchesSearch = (s.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             s.email.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesKohorte = filterKohorte === 'all' || s.kohorte_id === filterKohorte || (filterKohorte === 'none' && !s.kohorte_id);
         return matchesSearch && matchesKohorte;
@@ -149,7 +149,7 @@ export default function Students() {
                                                 <div className="w-10 h-10 rounded-full bg-vastu-light flex items-center justify-center text-vastu-dark">
                                                     <User size={20} />
                                                 </div>
-                                                <span className="font-medium text-vastu-dark">{student.full_name || 'Kein Name'}</span>
+                                                <span className="font-medium text-vastu-dark">{student.name || 'Kein Name'}</span>
                                             </div>
                                         </td>
                                         <td className="py-4 px-6 text-gray-600">
