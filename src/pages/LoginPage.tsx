@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Loader2, Eye, EyeOff, GraduationCap, Settings } from 'lucide-react';
@@ -11,7 +11,18 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
-    const { isDemo, switchDemoRole } = useAuth();
+    const { isDemo, switchDemoRole, role, user, loading: authLoading } = useAuth();
+
+    // Redirect automatically if user and role are established
+    useEffect(() => {
+        if (user && role && !loading && !authLoading) {
+            if (role === 'teacher') {
+                navigate('/teacher');
+            } else {
+                navigate('/student/welcome');
+            }
+        }
+    }, [user, role, loading, authLoading, navigate]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -25,7 +36,7 @@ export default function LoginPage() {
                 return;
             }
 
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
 
             if (error) {
                 if (error.message.includes('Invalid login')) {
@@ -34,20 +45,9 @@ export default function LoginPage() {
                     setError(error.message);
                 }
                 setLoading(false);
-            } else if (data.user) {
-                // Fetch the role immediately to decide where to route
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('role')
-                    .eq('id', data.user.id)
-                    .single();
-
-                if (profile?.role === 'teacher') {
-                    navigate('/teacher');
-                } else {
-                    navigate('/student/welcome');
-                }
             }
+            // If successful, the AuthContext listener will detect the session change, 
+            // fetch the profile role, update the `role` state, and trigger the useEffect above.
         } catch (err) {
             setError('Ein Fehler ist aufgetreten. Bitte versuche es erneut.');
             setLoading(false);
