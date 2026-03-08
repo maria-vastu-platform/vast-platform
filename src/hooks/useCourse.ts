@@ -30,10 +30,14 @@ export function useModules() {
 
                 if (error) throw error;
 
-                // Fetch user progress
+                // Get current user
+                const { data: { user } } = await supabase.auth.getUser();
+
+                // Fetch user progress for current user
                 const { data: progressData } = await supabase
                     .from('user_progress')
-                    .select('day_id');
+                    .select('day_id')
+                    .eq('user_id', user?.id);
 
                 const completedIds = new Set(progressData?.map((p: any) => p.day_id));
 
@@ -41,7 +45,7 @@ export function useModules() {
                 const { data: reviewData } = await supabase
                     .from('reviews')
                     .select('id')
-                    .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+                    .eq('user_id', user?.id)
                     .single();
 
                 const hasReview = !!reviewData;
@@ -123,10 +127,13 @@ export function useLektion(moduleId: string | undefined, lektionId: string | und
                 .select('*')
                 .eq('day_id', lektionId);
 
+            const { data: { user } } = await supabase.auth.getUser();
+
             const { data: progressData } = await supabase
                 .from('user_progress')
                 .select('id')
                 .eq('day_id', lektionId)
+                .eq('user_id', user?.id)
                 .single();
 
             if (dayData) {
