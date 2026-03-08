@@ -140,6 +140,14 @@ create table if not exists public.platform_settings (
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- 12. REVIEWS Table
+create table if not exists public.reviews (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users(id) not null,
+  review_url text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- STORAGE BUCKETS SETUP
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values 
@@ -188,6 +196,23 @@ create policy "Enable update for teachers" on public.platform_settings
 for all to authenticated 
 using ( (select role from public.profiles where id = auth.uid()) = 'teacher' )
 with check ( (select role from public.profiles where id = auth.uid()) = 'teacher' );
+
+alter table public.reviews enable row level security;
+create policy "Enable select for authenticated users" on public.reviews for select to authenticated using (true);
+create policy "Enable insert for authenticated users" on public.reviews for insert to authenticated with check (true);
+
+-- SUBMIT REVIEW FUNCTION
+create or replace function public.submit_review(url text)
+returns boolean
+language plpgsql
+security definer
+as $$
+begin
+  insert into public.reviews (user_id, review_url)
+  values (auth.uid(), url);
+  return true;
+end;
+$$;
 
 -- STORAGE SECURITY POLICIES
 create policy "Public access to avatars" on storage.objects for select using ( bucket_id = 'avatars' );
