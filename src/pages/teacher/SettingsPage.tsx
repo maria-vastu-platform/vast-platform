@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Loader2, Save, Video, Link as LinkIcon, Map } from 'lucide-react';
+import { Loader2, Save, Video, Link as LinkIcon, Map, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function SettingsPage() {
