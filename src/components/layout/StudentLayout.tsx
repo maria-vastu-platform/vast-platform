@@ -37,7 +37,13 @@ export default function StudentLayout() {
 
     if (!user) {
         return <Navigate to="/login" replace />;
-    } return (
+    }
+
+    if (user?.user_metadata?.role === 'teacher' || user?.user_metadata?.role === 'admin') {
+        return <Navigate to="/teacher" replace />;
+    }
+
+    return (
         <div className="min-h-screen bg-vastu-light md:bg-white">
             {/* Desktop Sidebar — Light c4b7b3 gradient with dark text */}
             <aside
