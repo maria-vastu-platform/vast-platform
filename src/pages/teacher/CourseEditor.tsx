@@ -283,6 +283,7 @@ const ModulEditor = ({ modul, onDelete, onUpdate, onAddLektion, onMoveUp, onMove
                 .from('weeks')
                 .update({
                     title: localModul.title,
+                    description: localModul.description,
                     available_from: localModul.available_from
                 })
                 .eq('id', modul.id);
@@ -314,28 +315,36 @@ const ModulEditor = ({ modul, onDelete, onUpdate, onAddLektion, onMoveUp, onMove
     return (
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
             {/* Module Header */}
-            <div className="p-4 bg-gray-50 flex items-center justify-between">
-                <div className="flex items-center gap-3 flex-1">
-                    <button onClick={() => setExpanded(!expanded)} className="p-1 -ml-1">
+            <div className="p-4 bg-gray-50 flex items-start justify-between">
+                <div className="flex items-start gap-3 flex-1">
+                    <button onClick={() => setExpanded(!expanded)} className="p-1 -ml-1 mt-1">
                         {expanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
                     </button>
-                    <div className="flex items-center justify-between flex-1">
+                    <div className="flex flex-col flex-1 mr-4">
                         <input
                             value={localModul.title}
                             onChange={(e) => handleChange('title', e.target.value)}
-                            className="text-xl font-bold text-vastu-dark bg-transparent border-b border-transparent hover:border-gray-300 focus:border-vastu-dark focus:outline-none px-1 py-0.5 w-full mr-4"
+                            className="text-xl font-bold text-vastu-dark bg-transparent border-b border-transparent hover:border-gray-300 focus:border-vastu-dark focus:outline-none px-1 py-0.5 w-full"
                             onClick={(e) => e.stopPropagation()}
+                            placeholder="Titel (z.B. Modul 1)"
                         />
-                        <button
-                            onClick={(e) => { e.stopPropagation(); onAddLektion(); }}
-                            className="flex items-center text-sm text-vastu-dark hover:text-vastu-dark/70 whitespace-nowrap mr-4"
-                        >
-                            <Plus className="w-4 h-4 mr-1" />
-                            Lektion
-                        </button>
+                        <input
+                            value={localModul.description || ''}
+                            onChange={(e) => handleChange('description', e.target.value)}
+                            className="text-sm font-body text-vastu-text-light bg-transparent border-b border-transparent hover:border-gray-300 focus:border-vastu-dark focus:outline-none px-1 py-0.5 w-full mt-1"
+                            onClick={(e) => e.stopPropagation()}
+                            placeholder="Beschreibung (z.B. Vastu Karte, Elemente...)"
+                        />
                     </div>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onAddLektion(); }}
+                        className="flex items-center text-sm text-vastu-dark hover:text-vastu-dark/70 whitespace-nowrap mt-2 mr-4"
+                    >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Lektion
+                    </button>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mt-1">
                     <button onClick={onMoveUp} disabled={isFirst} className="p-2 text-gray-400 hover:text-vastu-dark disabled:opacity-30">↑</button>
                     <button onClick={onMoveDown} disabled={isLast} className="p-2 text-gray-400 hover:text-vastu-dark disabled:opacity-30">↓</button>
                     <input
