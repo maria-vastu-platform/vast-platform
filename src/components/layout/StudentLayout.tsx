@@ -26,7 +26,7 @@ export default function StudentLayout() {
     const [isCourseExpanded, setIsCourseExpanded] = useState(true);
     const location = useLocation();
     const navigate = useNavigate();
-    const { user, signOut, loading: authLoading } = useAuth();
+    const { user, signOut, loading: authLoading, role } = useAuth();
     const { modules, loading: modulesLoading } = useModules();
     const displayName = user?.user_metadata?.full_name || user?.email || 'Teilnehmer';
 
@@ -39,7 +39,7 @@ export default function StudentLayout() {
         return <Navigate to="/login" replace />;
     }
 
-    if (user?.user_metadata?.role === 'teacher' || user?.user_metadata?.role === 'admin') {
+    if (role === 'teacher' || role === 'admin') {
         return <Navigate to="/teacher" replace />;
     }
 
