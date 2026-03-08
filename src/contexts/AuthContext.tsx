@@ -62,8 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
-            setUser(session?.user ?? null);
             if (session?.user) {
+                setUser(session.user); // Set user first
                 fetchUserRole(session.user.id);
             } else {
                 setLoading(false);
@@ -74,10 +74,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
-            setUser(session?.user ?? null);
             if (session?.user) {
+                setUser(session.user);
                 fetchUserRole(session.user.id);
             } else {
+                setUser(null);
                 setRole(null);
                 setLoading(false);
             }
@@ -109,12 +110,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 .single();
 
             if (error) {
+                console.warn('Profile fetch error, defaulting to student:', error.message);
                 setRole('student');
             } else {
-                setRole(data?.role as UserRole || 'student');
+                const fetchedRole = data?.role as UserRole || 'student';
+                setRole(fetchedRole);
                 if (user) {
-                    user.user_metadata = { ...user.user_metadata, ...data };
-                    setUser({ ...user });
+                    const updatedUser = { ...user, user_metadata: { ...user.user_metadata, ...data } };
+                    setUser(updatedUser);
                 }
             }
         } catch (err) {

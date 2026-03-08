@@ -37,6 +37,7 @@ export default function LoginPage() {
             }
 
             const { error } = await supabase.auth.signInWithPassword({ email, password });
+            setLoading(false);
 
             if (error) {
                 if (error.message.includes('Invalid login')) {

@@ -1,4 +1,4 @@
-import { ExternalLink, Play, Calendar, Video, MessageCircle, Star, ArrowRight, BookOpen, Library, Smartphone, LogOut, Map, ArrowLeft } from 'lucide-react';
+import { ExternalLink, Play, Calendar, Video, MessageCircle, Star, ArrowRight, BookOpen, Library, Smartphone, LogOut, Map, ArrowLeft, Loader2 } from 'lucide-react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useModules } from '../../hooks/useCourse';
@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 
 export default function WelcomePage() {
-    const { user, signOut, loading } = useAuth();
+    const { user, signOut, loading, role } = useAuth();
     const navigate = useNavigate();
     const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Teilnehmer';
     const { modules } = useModules();
@@ -49,8 +49,13 @@ export default function WelcomePage() {
         fetchSettings();
     }, [isDemo]);
 
-    if (loading) return null;
+    if (loading) return <div className="min-h-screen bg-vastu-dark-deep flex items-center justify-center"><Loader2 className="animate-spin text-vastu-gold" size={40} /></div>;
     if (!user) return <Navigate to="/login" replace />;
+
+    // Force redirect for teachers if they land here
+    if (role === 'teacher') {
+        return <Navigate to="/teacher" replace />;
+    }
 
     return (
         <div className="min-h-screen bg-vastu-light">
