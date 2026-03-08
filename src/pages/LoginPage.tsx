@@ -25,7 +25,7 @@ export default function LoginPage() {
                 return;
             }
 
-            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
             if (error) {
                 if (error.message.includes('Invalid login')) {
@@ -33,12 +33,23 @@ export default function LoginPage() {
                 } else {
                     setError(error.message);
                 }
-            } else {
-                navigate('/student/welcome');
+                setLoading(false);
+            } else if (data.user) {
+                // Fetch the role immediately to decide where to route
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', data.user.id)
+                    .single();
+
+                if (profile?.role === 'teacher') {
+                    navigate('/teacher');
+                } else {
+                    navigate('/student/welcome');
+                }
             }
         } catch (err) {
             setError('Ein Fehler ist aufgetreten. Bitte versuche es erneut.');
-        } finally {
             setLoading(false);
         }
     };
