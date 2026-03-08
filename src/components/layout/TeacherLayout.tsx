@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
-import { LogOut, Layout, Users, Loader2, FileText, Menu, X } from 'lucide-react';
+import { LogOut, Layout, Users, Loader2, FileText, Menu, X, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../contexts/AuthContext';
@@ -25,6 +25,7 @@ export default function TeacherLayout() {
         { path: '/teacher/students', label: 'Teilnehmer', icon: Users },
         { path: '/teacher/kohorten', label: 'Kohorten', icon: Users },
         { path: '/teacher/library', label: 'Bibliothek', icon: FileText },
+        { path: '/teacher/settings', label: 'Einstellungen', icon: Settings },
     ];
 
     const handleSignOut = () => {

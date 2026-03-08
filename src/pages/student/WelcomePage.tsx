@@ -3,17 +3,51 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useModules } from '../../hooks/useCourse';
 
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
+
 export default function WelcomePage() {
     const { user, signOut, loading } = useAuth();
     const navigate = useNavigate();
     const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Teilnehmer';
     const { modules } = useModules();
+    const { isDemo } = useAuth();
+
+    // Dynamic Settings State
+    const [settings, setSettings] = useState<{
+        welcome_video_url?: string;
+        zoom_link?: string;
+        telegram_link?: string;
+        vastu_map_link?: string;
+    } | null>(null);
 
     // Calculate overall course progress
     const mainModules = modules.filter(m => m.id !== 'pre' && m.id !== 'bonus');
     const totalLessons = mainModules.reduce((acc, m) => acc + m.lektionen.length, 0);
     const completedLessons = mainModules.reduce((acc, m) => acc + m.lektionen.filter(l => l.isCompleted).length, 0);
     const progressPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+    useEffect(() => {
+        async function fetchSettings() {
+            if (isDemo) {
+                setSettings({
+                    welcome_video_url: 'https://player.vimeo.com/video/placeholder',
+                    zoom_link: 'https://zoom.us',
+                    telegram_link: 'https://t.me',
+                    vastu_map_link: 'https://www.vastusphere.net'
+                });
+                return;
+            }
+
+            try {
+                const { data } = await supabase.from('platform_settings').select('*').single();
+                if (data) setSettings(data);
+            } catch (err) {
+                console.error('Error fetching settings:', err);
+            }
+        }
+        fetchSettings();
+    }, [isDemo]);
 
     if (loading) return null;
     if (!user) return <Navigate to="/login" replace />;
@@ -96,24 +130,26 @@ export default function WelcomePage() {
             {/* Content Sections Below the Fold */}
             <section className="max-w-5xl mx-auto px-6 py-16 space-y-12">
 
-                {/* Welcome Video */}
-                <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 overflow-hidden">
-                    <div className="p-6 md:p-8">
-                        <h3 className="font-serif text-2xl text-vastu-dark mb-1 flex items-center gap-2">
-                            <Play className="text-vastu-gold" size={22} />
-                            Begrüßungsvideo
-                        </h3>
-                        <p className="text-vastu-text-light font-body text-base mb-5">Schau dir das Einführungsvideo an, bevor du startest.</p>
-                        <div className="vimeo-wrapper">
-                            <iframe
-                                src="https://player.vimeo.com/video/placeholder"
-                                allow="autoplay; fullscreen; picture-in-picture"
-                                allowFullScreen
-                                title="Willkommen"
-                            />
+                {/* Welcome Video - Hidden if no link is provided */}
+                {settings?.welcome_video_url && settings.welcome_video_url.trim() !== '' && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 overflow-hidden">
+                        <div className="p-6 md:p-8">
+                            <h3 className="font-serif text-2xl text-vastu-dark mb-1 flex items-center gap-2">
+                                <Play className="text-vastu-gold" size={22} />
+                                Begrüßungsvideo
+                            </h3>
+                            <p className="text-vastu-text-light font-body text-base mb-5">Schau dir das Einführungsvideo an, bevor du startest.</p>
+                            <div className="vimeo-wrapper">
+                                <iframe
+                                    src={settings.welcome_video_url}
+                                    allow="autoplay; fullscreen; picture-in-picture"
+                                    allowFullScreen
+                                    title="Willkommen"
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* Info Grid */}
                 <div className="grid md:grid-cols-2 gap-6">
@@ -210,33 +246,37 @@ export default function WelcomePage() {
 
                     {/* Quick Links */}
                     <div className="space-y-4">
-                        <a href="#" target="_blank" rel="noopener noreferrer"
-                            className="block bg-white rounded-2xl shadow-sm border border-vastu-sand/50 p-5 hover:shadow-md hover:border-vastu-gold/30 transition-all group">
-                            <div className="flex items-center gap-4">
-                                <div className="w-[52px] h-[52px] rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors shrink-0">
-                                    <Video className="text-blue-600" size={26} />
+                        {settings?.zoom_link && settings.zoom_link.trim() !== '' && (
+                            <a href={settings.zoom_link} target="_blank" rel="noopener noreferrer"
+                                className="block bg-white rounded-2xl shadow-sm border border-vastu-sand/50 p-5 hover:shadow-md hover:border-vastu-gold/30 transition-all group">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-[52px] h-[52px] rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors shrink-0">
+                                        <Video className="text-blue-600" size={26} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h4 className="font-serif text-lg text-vastu-dark">Zoom Meeting</h4>
+                                        <p className="text-vastu-text-light font-body text-sm">Klicke hier, um dem Live-Meeting beizutreten</p>
+                                    </div>
+                                    <ExternalLink size={18} className="text-vastu-sand group-hover:text-vastu-dark transition-colors shrink-0" />
                                 </div>
-                                <div className="flex-1">
-                                    <h4 className="font-serif text-lg text-vastu-dark">Zoom Meeting</h4>
-                                    <p className="text-vastu-text-light font-body text-sm">Klicke hier, um dem Live-Meeting beizutreten</p>
-                                </div>
-                                <ExternalLink size={18} className="text-vastu-sand group-hover:text-vastu-dark transition-colors shrink-0" />
-                            </div>
-                        </a>
+                            </a>
+                        )}
 
-                        <a href="#" target="_blank" rel="noopener noreferrer"
-                            className="block bg-white rounded-2xl shadow-sm border border-vastu-sand/50 p-5 hover:shadow-md hover:border-vastu-gold/30 transition-all group">
-                            <div className="flex items-center gap-4">
-                                <div className="w-[52px] h-[52px] rounded-xl bg-sky-50 flex items-center justify-center group-hover:bg-sky-100 transition-colors shrink-0">
-                                    <MessageCircle className="text-sky-500" size={26} />
+                        {settings?.telegram_link && settings.telegram_link.trim() !== '' && (
+                            <a href={settings.telegram_link} target="_blank" rel="noopener noreferrer"
+                                className="block bg-white rounded-2xl shadow-sm border border-vastu-sand/50 p-5 hover:shadow-md hover:border-vastu-gold/30 transition-all group">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-[52px] h-[52px] rounded-xl bg-sky-50 flex items-center justify-center group-hover:bg-sky-100 transition-colors shrink-0">
+                                        <MessageCircle className="text-sky-500" size={26} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h4 className="font-serif text-lg text-vastu-dark">Telegram Kanal</h4>
+                                        <p className="text-vastu-text-light font-body text-sm">Fragen, Austausch & Community</p>
+                                    </div>
+                                    <ExternalLink size={18} className="text-vastu-sand group-hover:text-vastu-dark transition-colors shrink-0" />
                                 </div>
-                                <div className="flex-1">
-                                    <h4 className="font-serif text-lg text-vastu-dark">Telegram Kanal</h4>
-                                    <p className="text-vastu-text-light font-body text-sm">Fragen, Austausch & Community</p>
-                                </div>
-                                <ExternalLink size={18} className="text-vastu-sand group-hover:text-vastu-dark transition-colors shrink-0" />
-                            </div>
-                        </a>
+                            </a>
+                        )}
 
                         <Link to="/student"
                             className="block bg-vastu-dark grain-overlay rounded-2xl shadow-lg shadow-vastu-dark/15 p-5 hover:shadow-xl transition-all group text-white relative overflow-hidden">
@@ -253,7 +293,7 @@ export default function WelcomePage() {
                             </div>
                         </Link>
 
-                        <a href="https://www.vastusphere.net" target="_blank" rel="noopener noreferrer"
+                        <a href={settings?.vastu_map_link || "https://www.vastusphere.net"} target="_blank" rel="noopener noreferrer"
                             className="block bg-vastu-dark grain-overlay rounded-2xl shadow-lg shadow-vastu-dark/15 p-5 hover:shadow-xl transition-all group text-white relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-40 h-40 bg-vastu-gold opacity-10 rounded-full blur-[60px] translate-x-1/3 -translate-y-1/3" />
                             <div className="flex items-center gap-4 relative z-10">

@@ -119,7 +119,7 @@ create table if not exists public.stream_audio (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 10. STREAM COMMENTS Table
+-- 10. STREAM_COMMENTS Table
 create table if not exists public.stream_comments (
   id uuid default uuid_generate_v4() primary key,
   stream_id uuid references public.live_streams(id) on delete cascade not null,
@@ -128,6 +128,16 @@ create table if not exists public.stream_comments (
   "userAvatar" text,
   content text not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 11. PLATFORM SETTINGS Table (Singleton)
+create table if not exists public.platform_settings (
+  id integer primary key check (id = 1), -- Ensure only one row exists
+  welcome_video_url text,
+  zoom_link text,
+  telegram_link text,
+  vastu_map_link text,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 -- STORAGE BUCKETS SETUP
@@ -171,6 +181,13 @@ create policy "Enable full access for all users" on public.stream_audio for all 
 
 alter table public.stream_comments enable row level security;
 create policy "Enable full access for all users" on public.stream_comments for all using (true) with check (true);
+
+alter table public.platform_settings enable row level security;
+create policy "Enable select for authenticated users" on public.platform_settings for select to authenticated using (true);
+create policy "Enable update for teachers" on public.platform_settings 
+for all to authenticated 
+using ( (select role from public.profiles where id = auth.uid()) = 'teacher' )
+with check ( (select role from public.profiles where id = auth.uid()) = 'teacher' );
 
 -- STORAGE SECURITY POLICIES
 create policy "Public access to avatars" on storage.objects for select using ( bucket_id = 'avatars' );
