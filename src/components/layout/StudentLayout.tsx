@@ -39,7 +39,7 @@ export default function StudentLayout() {
         return <Navigate to="/login" replace />;
     }
 
-    if (role === 'teacher' || role === 'admin') {
+    if (role === 'teacher') {
         return <Navigate to="/teacher" replace />;
     }
 
