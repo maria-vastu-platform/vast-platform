@@ -26,6 +26,7 @@ export default function LektionView() {
     }
 
     const pdfMaterials = lektion.materials.filter(m => m.type === 'pdf');
+    const videoMaterials = lektion.materials.filter(m => m.type === 'video');
 
     const parsedLinks = lektion.materials
         .filter(m => m.type === 'link')
@@ -42,7 +43,7 @@ export default function LektionView() {
         return acc;
     }, {});
 
-    const otherMaterials = lektion.materials.filter(m => m.type !== 'pdf' && m.type !== 'link');
+    const otherMaterials = lektion.materials.filter(m => m.type !== 'pdf' && m.type !== 'link' && m.type !== 'video');
 
     const handleToggleComplete = (val: boolean) => {
         toggleComplete(val);
@@ -90,10 +91,36 @@ export default function LektionView() {
                     </div>
                 </div>
 
-                {/* Vimeo Video */}
+                {/* Vimeo Video (from dedicated field) */}
                 {lektion.vimeoUrl && (
                     <div className="p-6 md:p-8">
                         <VimeoPlayer url={lektion.vimeoUrl} />
+                    </div>
+                )}
+
+                {/* Additional Video Materials (uploaded or linked by teacher) */}
+                {videoMaterials.length > 0 && (
+                    <div className="px-6 md:px-8 pb-4 space-y-4">
+                        {videoMaterials.map((mat) => {
+                            const isVimeo = mat.url.includes('vimeo.com');
+                            return (
+                                <div key={mat.id}>
+                                    <h4 className="text-sm font-serif font-medium text-vastu-dark mb-2">{mat.title}</h4>
+                                    {isVimeo ? (
+                                        <VimeoPlayer url={mat.url} title={mat.title} />
+                                    ) : (
+                                        <video
+                                            controls
+                                            className="w-full rounded-xl bg-black"
+                                            preload="metadata"
+                                        >
+                                            <source src={mat.url} />
+                                            Dein Browser unterstützt dieses Video nicht.
+                                        </video>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
 
@@ -110,8 +137,11 @@ export default function LektionView() {
                     </div>
                 )}
 
-                {/* Mark as Complete — with celebration animation */}
+                {/* Mark as Complete — per lesson, with celebration animation */}
                 <div className="px-6 md:px-8 pb-6">
+                    <p className="text-xs font-sans text-vastu-text-light text-center mb-2">
+                        Markiere diese einzelne Lektion als erledigt:
+                    </p>
                     <button
                         onClick={() => handleToggleComplete(!lektion.isCompleted)}
                         className={`w-full flex items-center justify-center gap-3 py-4 rounded-xl text-base font-sans font-medium transition-all ${justCompleted ? 'animate-celebrate' : ''
@@ -123,12 +153,12 @@ export default function LektionView() {
                         {lektion.isCompleted ? (
                             <>
                                 <CheckCircle2 size={22} />
-                                Lektion abgeschlossen ✓
+                                ✓ Diese Lektion ist abgeschlossen
                             </>
                         ) : (
                             <>
                                 <input type="checkbox" className="lesson-check" readOnly checked={false} />
-                                Ich habe die Lektion abgeschlossen
+                                Diese Lektion als erledigt markieren
                             </>
                         )}
                     </button>
