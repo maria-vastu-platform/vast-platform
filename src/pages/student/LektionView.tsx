@@ -4,14 +4,30 @@ import { useLektion } from '../../hooks/useCourse';
 import { parseCategorizedLink } from '../../lib/utils';
 import { Material } from '../../lib/types';
 import VimeoPlayer from '../../components/VimeoPlayer';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function LektionView() {
     const { moduleId, lektionId } = useParams();
     const { lektion, loading, toggleComplete } = useLektion(moduleId, lektionId);
     const [justCompleted, setJustCompleted] = useState(false);
     const [descExpanded, setDescExpanded] = useState(false);
+    const [hwChecks, setHwChecks] = useState<Record<number, boolean>>({});
     const navigate = useNavigate();
+
+    // Load homework checks from localStorage when lesson changes
+    useEffect(() => {
+        if (lektionId) {
+            const saved = localStorage.getItem(`hw-${lektionId}`);
+            if (saved) setHwChecks(JSON.parse(saved));
+            else setHwChecks({});
+        }
+    }, [lektionId]);
+
+    const toggleHwItem = (index: number) => {
+        const updated = { ...hwChecks, [index]: !hwChecks[index] };
+        setHwChecks(updated);
+        localStorage.setItem(`hw-${lektionId}`, JSON.stringify(updated));
+    };
 
     if (loading) {
         return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-vastu-gold" size={40} /></div>;
@@ -136,18 +152,67 @@ export default function LektionView() {
                     </div>
                 )}
 
-                {/* Homework Description — styled with gold left bar */}
-                {lektion.homeworkDescription && (
-                    <div className="px-6 md:px-8 pb-6">
-                        <div className="bg-vastu-cream rounded-xl p-6 border border-vastu-sand/30 accent-bar-left" style={{ borderLeftColor: '#c4b7b3' }}>
-                            <h3 className="font-serif text-lg text-vastu-dark mb-3 flex items-center gap-2">
-                                <BookOpen size={18} className="text-vastu-gold" />
-                                Hausaufgabe
-                            </h3>
-                            <div className="text-vastu-text font-body prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: lektion.homeworkDescription }} />
-                        </div>
-                    </div>
-                )}
+                {/* Homework Checklist — interactive checkboxes */}
+                {lektion.homeworkDescription && (() => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(lektion.homeworkDescription, 'text/html');
+                    const listItems = doc.querySelectorAll('li');
+
+                    if (listItems.length > 0) {
+                        const items = Array.from(listItems).map((li, i) => ({
+                            id: i,
+                            text: li.textContent || '',
+                            checked: hwChecks[i] || false,
+                        }));
+
+                        const allDone = items.every(item => item.checked);
+
+                        return (
+                            <div className="px-6 md:px-8 pb-6">
+                                <div className={`rounded-xl p-6 border transition-colors ${allDone ? 'bg-green-50/50 border-green-200' : 'bg-vastu-cream border-vastu-sand/30'}`} style={{ borderLeftWidth: '4px', borderLeftColor: allDone ? '#22c55e' : '#c4b7b3' }}>
+                                    <h3 className="font-serif text-lg text-vastu-dark mb-4 flex items-center gap-2">
+                                        <BookOpen size={18} className={allDone ? 'text-green-500' : 'text-vastu-gold'} />
+                                        Hausaufgabe
+                                        {allDone && <span className="text-xs font-sans bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Alles erledigt ✓</span>}
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {items.map((item) => (
+                                            <label
+                                                key={item.id}
+                                                className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all group ${item.checked
+                                                    ? 'bg-green-50 hover:bg-green-100/80'
+                                                    : 'bg-white/60 hover:bg-white'
+                                                    }`}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={item.checked}
+                                                    onChange={() => toggleHwItem(item.id)}
+                                                    className="mt-0.5 w-5 h-5 rounded border-2 border-vastu-sand text-vastu-gold focus:ring-vastu-gold/30 cursor-pointer accent-vastu-gold"
+                                                />
+                                                <span className={`font-body text-sm leading-relaxed transition-all ${item.checked ? 'text-vastu-text-light line-through' : 'text-vastu-dark'}`}>
+                                                    {item.text}
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    } else {
+                        return (
+                            <div className="px-6 md:px-8 pb-6">
+                                <div className="bg-vastu-cream rounded-xl p-6 border border-vastu-sand/30" style={{ borderLeftWidth: '4px', borderLeftColor: '#c4b7b3' }}>
+                                    <h3 className="font-serif text-lg text-vastu-dark mb-3 flex items-center gap-2">
+                                        <BookOpen size={18} className="text-vastu-gold" />
+                                        Hausaufgabe
+                                    </h3>
+                                    <div className="text-vastu-text font-body prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: lektion.homeworkDescription }} />
+                                </div>
+                            </div>
+                        );
+                    }
+                })()}
 
                 {/* Mark as Complete — per lesson, with celebration animation */}
                 <div className="px-6 md:px-8 pb-6">
