@@ -5,6 +5,31 @@ import { parseCategorizedLink } from '../../lib/utils';
 import { Material } from '../../lib/types';
 import VimeoPlayer from '../../components/VimeoPlayer';
 import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
+
+// Parse homework text into individual checklist items
+function parseHomeworkItems(html: string): string[] {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const listItems = doc.querySelectorAll('li');
+
+    // If there are proper list items, use those
+    if (listItems.length > 0) {
+        return Array.from(listItems)
+            .map(li => (li.textContent || '').trim())
+            .filter(t => t.length > 0);
+    }
+
+    // Otherwise, try to split by line breaks, bullet chars, etc.
+    const text = doc.body.textContent || '';
+    const lines = text
+        .split(/[\n\r]+/)
+        .map(line => line.replace(/^[\s•\-\*·]+/, '').trim())
+        .filter(line => line.length > 0);
+
+    // Only return as checklist if there are multiple distinct lines
+    return lines.length > 1 ? lines : [];
+}
 
 export default function LektionView() {
     const { moduleId, lektionId } = useParams();
@@ -14,19 +39,44 @@ export default function LektionView() {
     const [hwChecks, setHwChecks] = useState<Record<number, boolean>>({});
     const navigate = useNavigate();
 
-    // Load homework checks from localStorage when lesson changes
+    // Load homework checks from Supabase (syncs across devices)
     useEffect(() => {
-        if (lektionId) {
-            const saved = localStorage.getItem(`hw-${lektionId}`);
-            if (saved) setHwChecks(JSON.parse(saved));
-            else setHwChecks({});
+        async function loadChecks() {
+            if (!lektionId) return;
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { data } = await supabase
+                .from('homework_checks')
+                .select('checks')
+                .eq('user_id', user.id)
+                .eq('day_id', lektionId)
+                .single();
+
+            if (data?.checks) {
+                setHwChecks(data.checks);
+            } else {
+                setHwChecks({});
+            }
         }
+        loadChecks();
     }, [lektionId]);
 
-    const toggleHwItem = (index: number) => {
+    const toggleHwItem = async (index: number) => {
         const updated = { ...hwChecks, [index]: !hwChecks[index] };
         setHwChecks(updated);
-        localStorage.setItem(`hw-${lektionId}`, JSON.stringify(updated));
+
+        // Save to Supabase
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        await supabase
+            .from('homework_checks')
+            .upsert({
+                user_id: user.id,
+                day_id: lektionId,
+                checks: updated,
+            }, { onConflict: 'user_id,day_id' });
     };
 
     if (loading) {
@@ -154,14 +204,12 @@ export default function LektionView() {
 
                 {/* Homework Checklist — interactive checkboxes */}
                 {lektion.homeworkDescription && (() => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(lektion.homeworkDescription, 'text/html');
-                    const listItems = doc.querySelectorAll('li');
+                    const hwItems = parseHomeworkItems(lektion.homeworkDescription);
 
-                    if (listItems.length > 0) {
-                        const items = Array.from(listItems).map((li, i) => ({
+                    if (hwItems.length > 0) {
+                        const items = hwItems.map((text, i) => ({
                             id: i,
-                            text: li.textContent || '',
+                            text,
                             checked: hwChecks[i] || false,
                         }));
 
