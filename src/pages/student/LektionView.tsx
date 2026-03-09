@@ -86,7 +86,7 @@ export default function LektionView() {
                     <div className="relative z-10">
                         <h1 className="text-2xl md:text-4xl font-serif mb-2 text-vastu-dark">{lektion.title}</h1>
                         {lektion.description && (
-                            <p className="text-vastu-dark/50 font-body leading-relaxed max-w-2xl text-lg">{lektion.description}</p>
+                            <div className="text-vastu-dark/50 font-body leading-relaxed max-w-2xl text-base prose prose-sm line-clamp-4" dangerouslySetInnerHTML={{ __html: lektion.description }} />
                         )}
                     </div>
                 </div>
