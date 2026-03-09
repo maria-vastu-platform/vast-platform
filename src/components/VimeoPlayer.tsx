@@ -12,9 +12,10 @@ function extractVimeoId(url: string): string {
     if (/^\d+$/.test(url)) return url;
 
     const patterns = [
-        /vimeo\.com\/video\/(\d+)/,
-        /vimeo\.com\/(\d+)/,
-        /player\.vimeo\.com\/video\/(\d+)/,
+        /vimeo\.com\/manage\/videos\/(\d+)/,   // Management dashboard URL
+        /vimeo\.com\/video\/(\d+)/,             // Direct video URL
+        /vimeo\.com\/(\d+)/,                    // Standard URL
+        /player\.vimeo\.com\/video\/(\d+)/,     // Embed URL
     ];
 
     for (const pattern of patterns) {
