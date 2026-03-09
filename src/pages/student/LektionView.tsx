@@ -10,6 +10,7 @@ export default function LektionView() {
     const { moduleId, lektionId } = useParams();
     const { lektion, loading, toggleComplete } = useLektion(moduleId, lektionId);
     const [justCompleted, setJustCompleted] = useState(false);
+    const [descExpanded, setDescExpanded] = useState(false);
     const navigate = useNavigate();
 
     if (loading) {
@@ -86,7 +87,18 @@ export default function LektionView() {
                     <div className="relative z-10">
                         <h1 className="text-2xl md:text-4xl font-serif mb-2 text-vastu-dark">{lektion.title}</h1>
                         {lektion.description && (
-                            <div className="text-vastu-dark/50 font-body leading-relaxed max-w-2xl text-base prose prose-sm line-clamp-4" dangerouslySetInnerHTML={{ __html: lektion.description }} />
+                            <div>
+                                <div
+                                    className={`text-vastu-dark/50 font-body leading-relaxed max-w-2xl text-base prose prose-sm ${!descExpanded ? 'line-clamp-3' : ''}`}
+                                    dangerouslySetInnerHTML={{ __html: lektion.description }}
+                                />
+                                <button
+                                    onClick={() => setDescExpanded(!descExpanded)}
+                                    className="text-vastu-dark/70 hover:text-vastu-dark text-sm font-sans mt-2 underline underline-offset-2 transition-colors"
+                                >
+                                    {descExpanded ? 'Weniger anzeigen' : 'Mehr anzeigen...'}
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>
