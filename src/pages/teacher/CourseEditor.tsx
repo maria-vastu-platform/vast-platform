@@ -39,8 +39,9 @@ interface Modul {
 
 // --- Sub-components ---
 
-const LektionEditor = ({ lektion, onDelete, onUpdate, onMoveUp, onMoveDown, isFirst, isLast }: {
+const LektionEditor = ({ lektion, moduleId, onDelete, onUpdate, onMoveUp, onMoveDown, isFirst, isLast }: {
     lektion: Lektion,
+    moduleId: string,
     onDelete: () => void,
     onUpdate: () => void,
     onMoveUp: () => void,
@@ -90,9 +91,14 @@ const LektionEditor = ({ lektion, onDelete, onUpdate, onMoveUp, onMoveDown, isFi
 
     const handleAddMaterial = async (url: string, type: string, name: string, isHomework = false) => {
         const { error } = await supabase.from('materials').insert([{
-            title: name, type, url, day_id: lektion.id, is_homework: isHomework
+            title: name, type, url, day_id: lektion.id, week_id: moduleId, is_homework: isHomework
         }]);
-        if (!error) onUpdate();
+        if (error) {
+            console.error('Fehler beim Hinzufügen des Materials:', error);
+            alert('Fehler beim Hinzufügen des Materials: ' + error.message);
+        } else {
+            onUpdate();
+        }
     };
 
     const handleDeleteMaterial = async (id: string) => {
@@ -433,6 +439,7 @@ const ModulEditor = ({ modul, onDelete, onUpdate, onAddLektion, onMoveUp, onMove
                                     <LektionEditor
                                         key={lektion.id}
                                         lektion={lektion}
+                                        moduleId={modul.id}
                                         onDelete={() => {
                                             if (window.confirm('Lektion löschen?')) {
                                                 supabase.from('days').delete().eq('id', lektion.id).then(() => onUpdate());
