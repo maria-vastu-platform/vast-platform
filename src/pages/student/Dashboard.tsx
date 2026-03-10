@@ -140,14 +140,14 @@ export default function StudentDashboard() {
 
                         {/* Progress Bar — with glow */}
                         {totalCount > 0 && (
-                            <div className="max-w-md">
+                            <div className="max-w-md bg-vastu-dark/10 backdrop-blur-sm rounded-xl p-4">
                                 <div className="flex justify-between text-sm font-sans mb-2">
-                                    <span className="text-white/80 font-medium">Fortschritt</span>
-                                    <span className="text-white font-semibold">{completedCount}/{totalCount} Lektionen</span>
+                                    <span className="text-vastu-dark font-semibold">Fortschritt</span>
+                                    <span className="text-vastu-dark font-bold">{completedCount}/{totalCount} Lektionen</span>
                                 </div>
-                                <div className={`h-2 bg-white/10 rounded-full overflow-hidden ${progressPercent > 0 ? 'progress-glow active' : ''}`}>
+                                <div className={`h-2.5 bg-vastu-dark/15 rounded-full overflow-hidden ${progressPercent > 0 ? 'progress-glow active' : ''}`}>
                                     <div
-                                        className="h-full bg-gradient-to-r from-vastu-gold to-vastu-accent rounded-full transition-all duration-700 ease-out"
+                                        className="h-full bg-gradient-to-r from-vastu-dark to-vastu-gold rounded-full transition-all duration-700 ease-out"
                                         style={{ width: `${progressPercent}%` }}
                                     />
                                 </div>
