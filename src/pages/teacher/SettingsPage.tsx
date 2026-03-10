@@ -2,6 +2,23 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Loader2, Save, Video, Link as LinkIcon, Map, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { getVideoEmbedUrl } from '../../lib/utils';
+
+function normalizeWelcomeVideoUrl(rawUrl: string) {
+    const url = rawUrl.trim();
+    if (!url) return '';
+
+    if (url.includes('vimeo.com') && !url.includes('player.vimeo.com/video/')) {
+        const match = url.match(/vimeo\.com\/(?:manage\/videos\/)?(\d+)/);
+        if (match?.[1]) return `https://player.vimeo.com/video/${match[1]}`;
+    }
+
+    if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('<iframe')) {
+        return getVideoEmbedUrl(url);
+    }
+
+    return url;
+}
 
 export default function SettingsPage() {
     const [welcomeVideoUrl, setWelcomeVideoUrl] = useState('');
@@ -65,12 +82,13 @@ export default function SettingsPage() {
         }
 
         try {
+            const normalizedWelcomeVideoUrl = normalizeWelcomeVideoUrl(welcomeVideoUrl);
             // Upsert the single row (we will use id = 1 in the database)
             const { error } = await supabase
                 .from('platform_settings')
                 .upsert({
                     id: 1, // Enforce single row
-                    welcome_video_url: welcomeVideoUrl,
+                    welcome_video_url: normalizedWelcomeVideoUrl,
                     zoom_link: zoomLink,
                     telegram_link: telegramLink,
                     vastu_map_link: vastuMapLink,
@@ -79,6 +97,7 @@ export default function SettingsPage() {
 
             if (error) throw error;
 
+            setWelcomeVideoUrl(normalizedWelcomeVideoUrl);
             setMessage({ text: 'Einstellungen erfolgreich gespeichert!', type: 'success' });
         } catch (err) {
             console.error('Error saving settings:', err);

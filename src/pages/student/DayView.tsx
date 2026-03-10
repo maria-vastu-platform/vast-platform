@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Download, FileText, Video, File, ChevronRight, ChevronLeft, Loader2, Youtube, ArrowLeft } from 'lucide-react';
 import { useModules, useLektion } from '../../hooks/useCourse';
 import { Module, Lektion, Material } from '../../lib/types';
-import { getVideoEmbedUrl, cn } from '../../lib/utils';
+import { getVideoEmbedUrl, cn, navigateBackOr } from '../../lib/utils';
 
 // Helper component for dual video player (reused logic)
 const VideoPlayer = ({ youtubeUrl, rutubeUrl, title }: { youtubeUrl?: string, rutubeUrl?: string, title: string }) => {
@@ -137,7 +136,7 @@ export default function DayView() {
         <div className="max-w-6xl mx-auto animate-fade-in">
             {/* Back Navigation */}
             <button
-                onClick={() => navigate(-1)}
+                onClick={() => navigateBackOr(navigate, '/student')}
                 className="inline-flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors group text-sm font-sans mb-6"
             >
                 <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />

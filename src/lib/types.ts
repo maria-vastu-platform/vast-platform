@@ -92,7 +92,8 @@ export interface Review {
 export interface Kohorte {
     id: string;
     name: string;
-    startDate: string;
+    startDate?: string;
+    start_date?: string;
     description?: string;
     color?: string;
     created_at?: string;

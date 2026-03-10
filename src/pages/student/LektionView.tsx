@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { FileText, Download, Loader2, BookOpen, CheckCircle2, ChevronRight, Home, ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
 import { useLektion, useModules } from '../../hooks/useCourse';
-import { parseCategorizedLink } from '../../lib/utils';
+import { navigateBackOr, parseCategorizedLink } from '../../lib/utils';
 import { Material } from '../../lib/types';
 import VimeoPlayer from '../../components/VimeoPlayer';
 import { useState, useEffect } from 'react';
@@ -24,7 +24,7 @@ function parseHomeworkItems(html: string): string[] {
     const text = doc.body.textContent || '';
     const lines = text
         .split(/[\n\r]+/)
-        .map(line => line.replace(/^[\s•\-\*·]+/, '').trim())
+        .map(line => line.replace(/^[\s•\-*·]+/, '').trim())
         .filter(line => line.length > 0);
 
     // Only return as checklist if there are multiple distinct lines
@@ -39,6 +39,26 @@ export default function LektionView() {
     const [hwChecks, setHwChecks] = useState<Record<number, boolean>>({});
     const { modules } = useModules();
     const navigate = useNavigate();
+    const storageKey = `homework-checks:${moduleId || 'unknown'}:${lektionId || 'unknown'}`;
+
+    const loadChecksFromLocalStorage = () => {
+        try {
+            const value = localStorage.getItem(storageKey);
+            if (!value) return {};
+            const parsed = JSON.parse(value);
+            return typeof parsed === 'object' && parsed ? parsed : {};
+        } catch {
+            return {};
+        }
+    };
+
+    const saveChecksToLocalStorage = (checks: Record<number, boolean>) => {
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(checks));
+        } catch {
+            // Ignore quota errors to avoid blocking UI interactions.
+        }
+    };
 
     // Compute next lesson / next module
     const nextNav = (() => {
@@ -70,40 +90,60 @@ export default function LektionView() {
     useEffect(() => {
         async function loadChecks() {
             if (!lektionId) return;
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                    setHwChecks(loadChecksFromLocalStorage());
+                    return;
+                }
 
-            const { data } = await supabase
-                .from('homework_checks')
-                .select('checks')
-                .eq('user_id', user.id)
-                .eq('day_id', lektionId)
-                .single();
+                const { data, error } = await supabase
+                    .from('homework_checks')
+                    .select('checks')
+                    .eq('user_id', user.id)
+                    .eq('day_id', lektionId)
+                    .single();
 
-            if (data?.checks) {
-                setHwChecks(data.checks);
-            } else {
-                setHwChecks({});
+                if (error) {
+                    setHwChecks(loadChecksFromLocalStorage());
+                    return;
+                }
+
+                if (data?.checks) {
+                    setHwChecks(data.checks);
+                    saveChecksToLocalStorage(data.checks);
+                } else {
+                    setHwChecks(loadChecksFromLocalStorage());
+                }
+            } catch {
+                setHwChecks(loadChecksFromLocalStorage());
             }
         }
         loadChecks();
-    }, [lektionId]);
+    }, [lektionId, storageKey]);
 
     const toggleHwItem = async (index: number) => {
         const updated = { ...hwChecks, [index]: !hwChecks[index] };
         setHwChecks(updated);
+        saveChecksToLocalStorage(updated);
 
-        // Save to Supabase
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        await supabase
-            .from('homework_checks')
-            .upsert({
-                user_id: user.id,
-                day_id: lektionId,
-                checks: updated,
-            }, { onConflict: 'user_id,day_id' });
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            const { error } = await supabase
+                .from('homework_checks')
+                .upsert({
+                    user_id: user.id,
+                    day_id: lektionId,
+                    checks: updated,
+                }, { onConflict: 'user_id,day_id' });
+            if (error) {
+                // Keep local storage as fallback when backend table is unavailable.
+                return;
+            }
+        } catch {
+            // Keep local storage state as source of truth on write failures.
+        }
     };
 
     if (loading) {
@@ -151,7 +191,7 @@ export default function LektionView() {
         <div className="animate-fade-in space-y-6">
             {/* Back Button */}
             <button
-                onClick={() => navigate(-1)}
+                onClick={() => navigateBackOr(navigate, '/student')}
                 className="inline-flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors group text-sm font-sans"
             >
                 <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />

@@ -1,22 +1,27 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Loader2, Search, Mail, User } from 'lucide-react';
+import { Kohorte } from '../../lib/types';
 
 interface StudentProfile {
     id: string;
     email: string;
     name: string | null;
+    full_name?: string | null;
     created_at: string;
     kohorte_id?: string;
+    kohorte?: string;
 }
 
-const MOCK_KOHORTEN = [
-    { id: 'k1', name: 'Frühling 2026', color: '#c4b7b3' },
-    { id: 'k2', name: 'Herbst 2026', color: '#d4a574' },
-];
+type DbError = { code?: string; message?: string };
+const isColumnMissing = (error: DbError | null | undefined, columnName: string) =>
+    !!error && (error.code === '42703' || error.message?.includes(columnName));
+const isTableMissing = (error: DbError | null | undefined, tableName: string) =>
+    !!error && (error.code === '42P01' || error.message?.includes(tableName));
 
 export default function Students() {
     const [students, setStudents] = useState<StudentProfile[]>([]);
+    const [kohorten, setKohorten] = useState<Kohorte[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterKohorte, setFilterKohorte] = useState<string>('all');
@@ -24,25 +29,43 @@ export default function Students() {
     useEffect(() => {
         async function fetchStudents() {
             try {
-                if (!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('placeholder')) {
-                    setStudents([
-                        { id: '1', name: 'Anna Schneider', email: 'anna@beispiel.de', created_at: '2026-02-10T10:00:00Z', kohorte_id: 'k1' },
-                        { id: '2', name: 'Lisa Müller', email: 'lisa@beispiel.de', created_at: '2026-02-12T14:30:00Z', kohorte_id: 'k1' },
-                        { id: '3', name: 'Sophie Wagner', email: 'sophie@beispiel.de', created_at: '2026-02-15T09:15:00Z', kohorte_id: 'k1' },
-                        { id: '4', name: 'Julia Fischer', email: 'julia@beispiel.de', created_at: '2026-02-18T11:45:00Z', kohorte_id: 'k2' },
-                    ]);
-                    setLoading(false);
-                    return;
-                }
-
-                const { data, error } = await supabase
+                let profilesRes: any = await supabase
                     .from('profiles')
-                    .select('*')
+                    .select('id, email, name, full_name, created_at, kohorte_id, kohorte, role')
                     .eq('role', 'student')
                     .order('created_at', { ascending: false });
+                if (profilesRes.error && isColumnMissing(profilesRes.error, 'full_name')) {
+                    profilesRes = await supabase
+                        .from('profiles')
+                        .select('id, email, name, created_at, kohorte_id, kohorte, role')
+                        .eq('role', 'student')
+                        .order('created_at', { ascending: false });
+                }
+                if (profilesRes.error && isColumnMissing(profilesRes.error, 'kohorte_id')) {
+                    profilesRes = await supabase
+                        .from('profiles')
+                        .select('id, email, name, created_at, kohorte, role')
+                        .eq('role', 'student')
+                        .order('created_at', { ascending: false });
+                }
+                if (profilesRes.error) throw profilesRes.error;
 
-                if (error) throw error;
-                setStudents(data || []);
+                const kohortenRes = await supabase
+                    .from('kohorten')
+                    .select('id, name, start_date, description, color, created_at')
+                    .order('start_date', { ascending: true });
+
+                if (!kohortenRes.error) {
+                    setKohorten(kohortenRes.data || []);
+                } else if (!isTableMissing(kohortenRes.error, 'kohorten')) {
+                    console.warn('Kohorten konnten nicht geladen werden:', kohortenRes.error.message);
+                }
+
+                const normalizedStudents = (profilesRes.data || []).map((profile: any) => ({
+                    ...profile,
+                    name: profile.full_name || profile.name || null,
+                }));
+                setStudents(normalizedStudents);
             } catch (error) {
                 console.error('Error fetching students:', error);
             } finally {
@@ -53,22 +76,29 @@ export default function Students() {
     }, []);
 
     const assignKohorte = async (studentId: string, kohorteId: string) => {
-        // Optimistic UI update
         const previous = students;
         setStudents(prev => prev.map(s =>
-            s.id === studentId ? { ...s, kohorte_id: kohorteId || undefined } : s
+            s.id === studentId ? { ...s, kohorte_id: kohorteId || undefined, kohorte: kohorteId || undefined } : s
         ));
 
         try {
-            const { error } = await supabase
+            const updatePrimary = await supabase
                 .from('profiles')
                 .update({ kohorte_id: kohorteId || null })
                 .eq('id', studentId);
 
-            if (error) throw error;
+            if (updatePrimary.error && isColumnMissing(updatePrimary.error, 'kohorte_id')) {
+                const updateFallback = await supabase
+                    .from('profiles')
+                    .update({ kohorte: kohorteId || null })
+                    .eq('id', studentId);
+                if (updateFallback.error) throw updateFallback.error;
+                return;
+            }
+            if (updatePrimary.error) throw updatePrimary.error;
         } catch (error) {
             console.error('Fehler beim Zuweisen der Kohorte:', error);
-            setStudents(previous); // Revert on error
+            setStudents(previous);
             alert('Fehler beim Speichern der Kohorte. Bitte versuche es erneut.');
         }
     };
@@ -77,19 +107,24 @@ export default function Students() {
 
     const inviteLink = `${window.location.origin}/register`;
 
-    const copyLink = () => {
-        navigator.clipboard.writeText(inviteLink);
-        alert('Link wurde kopiert!');
+    const copyLink = async () => {
+        try {
+            await navigator.clipboard.writeText(inviteLink);
+            alert('Link wurde kopiert!');
+        } catch {
+            alert('Kopieren fehlgeschlagen. Bitte Link manuell kopieren.');
+        }
     };
 
     const filtered = students.filter(s => {
         const matchesSearch = (s.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             s.email.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesKohorte = filterKohorte === 'all' || s.kohorte_id === filterKohorte || (filterKohorte === 'none' && !s.kohorte_id);
+        const studentKohorte = s.kohorte_id || s.kohorte;
+        const matchesKohorte = filterKohorte === 'all' || studentKohorte === filterKohorte || (filterKohorte === 'none' && !studentKohorte);
         return matchesSearch && matchesKohorte;
     });
 
-    const getKohorte = (id?: string) => MOCK_KOHORTEN.find(k => k.id === id);
+    const getKohorte = (id?: string) => kohorten.find(k => k.id === id);
 
     return (
         <div className="max-w-5xl mx-auto animate-fade-in">
@@ -125,7 +160,7 @@ export default function Students() {
                         className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-vastu-accent bg-white"
                     >
                         <option value="all">Alle Kohorten</option>
-                        {MOCK_KOHORTEN.map(k => (
+                        {kohorten.map(k => (
                             <option key={k.id} value={k.id}>{k.name}</option>
                         ))}
                         <option value="none">Nicht zugewiesen</option>
@@ -175,13 +210,13 @@ export default function Students() {
                                         </td>
                                         <td className="py-4 px-6">
                                             <select
-                                                value={student.kohorte_id || ''}
+                                                value={student.kohorte_id || student.kohorte || ''}
                                                 onChange={e => assignKohorte(student.id, e.target.value)}
                                                 className="text-sm px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:border-vastu-accent bg-white"
                                                 style={kohorte ? { borderColor: kohorte.color, color: kohorte.color } : {}}
                                             >
                                                 <option value="">— Keine —</option>
-                                                {MOCK_KOHORTEN.map(k => (
+                                                {kohorten.map(k => (
                                                     <option key={k.id} value={k.id}>{k.name}</option>
                                                 ))}
                                             </select>

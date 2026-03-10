@@ -5,6 +5,16 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+type NavigateFn = (...args: any[]) => void;
+
+export function navigateBackOr(navigate: NavigateFn, fallbackPath: string) {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+        navigate(-1);
+        return;
+    }
+    navigate(fallbackPath);
+}
+
 export function getVideoEmbedUrl(url: string): string {
     if (!url) return '';
 

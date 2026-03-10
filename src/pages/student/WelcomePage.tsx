@@ -5,6 +5,8 @@ import { useModules } from '../../hooks/useCourse';
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { getVideoEmbedUrl, navigateBackOr } from '../../lib/utils';
+import VimeoPlayer from '../../components/VimeoPlayer';
 
 export default function WelcomePage() {
     const { user, signOut, loading, role } = useAuth();
@@ -20,6 +22,9 @@ export default function WelcomePage() {
         telegram_link?: string;
         vastu_map_link?: string;
     } | null>(null);
+    const welcomeVideoUrl = settings?.welcome_video_url?.trim() || '';
+    const isVimeoWelcomeVideo = welcomeVideoUrl.includes('vimeo.com');
+    const embedWelcomeUrl = isVimeoWelcomeVideo ? '' : getVideoEmbedUrl(welcomeVideoUrl);
 
     // Calculate overall course progress
     const mainModules = modules.filter(m => m.id !== 'pre' && m.id !== 'bonus');
@@ -71,7 +76,7 @@ export default function WelcomePage() {
                     </Link>
                     <div className="flex items-center gap-4">
                         <button
-                            onClick={() => navigate(-1)}
+                            onClick={() => navigateBackOr(navigate, '/student')}
                             className="hidden sm:flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors mr-4 group text-sm font-sans"
                         >
                             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
@@ -136,7 +141,7 @@ export default function WelcomePage() {
             <section className="max-w-5xl mx-auto px-6 py-16 space-y-12">
 
                 {/* Welcome Video - Hidden if no link is provided */}
-                {settings?.welcome_video_url && settings.welcome_video_url.trim() !== '' && (
+                {welcomeVideoUrl !== '' && (
                     <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 overflow-hidden">
                         <div className="p-6 md:p-8">
                             <h3 className="font-serif text-2xl text-vastu-dark mb-1 flex items-center gap-2">
@@ -144,14 +149,22 @@ export default function WelcomePage() {
                                 Begrüßungsvideo
                             </h3>
                             <p className="text-vastu-text-light font-body text-base mb-5">Schau dir das Einführungsvideo an, bevor du startest.</p>
-                            <div className="vimeo-wrapper">
-                                <iframe
-                                    src={settings.welcome_video_url}
-                                    allow="autoplay; fullscreen; picture-in-picture"
-                                    allowFullScreen
-                                    title="Willkommen"
-                                />
-                            </div>
+                            {isVimeoWelcomeVideo ? (
+                                <VimeoPlayer url={welcomeVideoUrl} title="Willkommen" />
+                            ) : !embedWelcomeUrl ? (
+                                <div className="rounded-xl border border-vastu-sand/40 bg-vastu-cream/40 p-4 text-sm text-vastu-text-light">
+                                    Der gespeicherte Video-Link ist nicht als Embed-Link lesbar. Bitte im Admin-Bereich aktualisieren.
+                                </div>
+                            ) : (
+                                <div className="vimeo-wrapper">
+                                    <iframe
+                                        src={embedWelcomeUrl}
+                                        allow="autoplay; fullscreen; picture-in-picture"
+                                        allowFullScreen
+                                        title="Willkommen"
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

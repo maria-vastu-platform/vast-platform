@@ -1,12 +1,13 @@
 import { Smartphone, Monitor, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { navigateBackOr } from '../../lib/utils';
 
 export default function InstallGuide() {
     const navigate = useNavigate();
     return (
         <div className="animate-fade-in space-y-6">
             <button
-                onClick={() => navigate(-1)}
+                onClick={() => navigateBackOr(navigate, '/student')}
                 className="inline-flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors group"
             >
                 <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />

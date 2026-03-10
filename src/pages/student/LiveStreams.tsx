@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { LiveStream } from '../../lib/types';
 import { Calendar, Clock, Video, Youtube, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { cn, getVideoEmbedUrl } from '../../lib/utils';
+import { cn, getVideoEmbedUrl, navigateBackOr } from '../../lib/utils';
 
 // Helper component for dual video player
 const VideoPlayer = ({ youtubeUrl, rutubeUrl, title }: { youtubeUrl?: string, rutubeUrl?: string, title: string }) => {
@@ -122,7 +122,7 @@ export default function LiveStreams() {
         <div className="space-y-12 animate-fade-in">
             {/* Back Navigation */}
             <button
-                onClick={() => navigate(-1)}
+                onClick={() => navigateBackOr(navigate, '/student')}
                 className="inline-flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors group text-sm font-sans mb-6"
             >
                 <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />

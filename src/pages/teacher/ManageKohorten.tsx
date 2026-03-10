@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Kohorte } from '../../lib/types';
-import { Plus, Trash2, Save, X, Users, Calendar, Edit3 } from 'lucide-react';
+import { Plus, Trash2, Save, X, Users, Calendar, Edit3, Loader2 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 const KOHORTE_COLORS = [
     { label: 'Bronze', value: '#c4b7b3' },
@@ -11,13 +12,79 @@ const KOHORTE_COLORS = [
 ];
 
 export default function ManageKohorten() {
-    const [kohorten, setKohorten] = useState<Kohorte[]>([
-        { id: 'k1', name: 'Frühling 2026', startDate: '2026-03-20', description: 'Erste Ausbildungsgruppe — Start März 2026', color: '#c4b7b3', created_at: '2026-01-15T10:00:00Z' },
-        { id: 'k2', name: 'Herbst 2026', startDate: '2026-09-15', description: 'Zweite Ausbildungsgruppe — Start September 2026', color: '#d4a574', created_at: '2026-01-20T10:00:00Z' },
-    ]);
+    const [kohorten, setKohorten] = useState<Kohorte[]>([]);
+    const [studentCountByKohorte, setStudentCountByKohorte] = useState<Record<string, number>>({});
+    const [loading, setLoading] = useState(true);
+    const [saveLoading, setSaveLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState({ name: '', startDate: '', description: '', color: '#c4b7b3' });
+
+    const isMissingTable = (error: any) => error?.code === '42P01' || error?.message?.includes('kohorten');
+    const isMissingColumn = (error: any, columnName: string) => error?.code === '42703' || error?.message?.includes(columnName);
+
+    const toUi = (row: any): Kohorte => ({
+        id: row.id,
+        name: row.name,
+        startDate: row.start_date ? String(row.start_date).slice(0, 10) : '',
+        description: row.description || '',
+        color: row.color || '#c4b7b3',
+        created_at: row.created_at,
+    });
+
+    async function fetchKohorten() {
+        try {
+            setLoading(true);
+            setErrorMessage('');
+
+            const { data, error } = await supabase
+                .from('kohorten')
+                .select('id, name, start_date, description, color, created_at')
+                .order('start_date', { ascending: true });
+
+            if (error) {
+                if (isMissingTable(error)) {
+                    setErrorMessage('Die Tabelle "kohorten" fehlt in der Datenbank. Bitte SQL-Migration ausführen.');
+                    setKohorten([]);
+                    return;
+                }
+                throw error;
+            }
+
+            const list = (data || []).map(toUi);
+            setKohorten(list);
+
+            let profileRes: any = await supabase
+                .from('profiles')
+                .select('id, kohorte_id, kohorte')
+                .limit(5000);
+            if (profileRes.error && isMissingColumn(profileRes.error, 'kohorte_id')) {
+                profileRes = await supabase
+                    .from('profiles')
+                    .select('id, kohorte')
+                    .limit(5000);
+            }
+            if (!profileRes.error) {
+                const counts: Record<string, number> = {};
+                for (const profile of profileRes.data || []) {
+                    const key = profile.kohorte_id || profile.kohorte;
+                    if (!key) continue;
+                    counts[key] = (counts[key] || 0) + 1;
+                }
+                setStudentCountByKohorte(counts);
+            }
+        } catch (error: any) {
+            console.error('Fehler beim Laden der Kohorten:', error);
+            setErrorMessage(error?.message || 'Fehler beim Laden der Kohorten.');
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        fetchKohorten();
+    }, []);
 
     const handleAdd = () => {
         setFormData({ name: '', startDate: '', description: '', color: '#c4b7b3' });
@@ -26,39 +93,83 @@ export default function ManageKohorten() {
     };
 
     const handleEdit = (k: Kohorte) => {
-        setFormData({ name: k.name, startDate: k.startDate, description: k.description || '', color: k.color || '#c4b7b3' });
+        setFormData({ name: k.name, startDate: k.startDate || k.start_date || '', description: k.description || '', color: k.color || '#c4b7b3' });
         setEditingId(k.id);
         setIsEditing(true);
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!formData.name || !formData.startDate) return;
+        try {
+            setSaveLoading(true);
+            setErrorMessage('');
 
-        if (editingId) {
-            setKohorten(prev => prev.map(k => k.id === editingId ? { ...k, ...formData } : k));
-        } else {
-            const newKohorte: Kohorte = {
-                id: `k${Date.now()}`,
-                name: formData.name,
-                startDate: formData.startDate,
-                description: formData.description,
+            const payload = {
+                name: formData.name.trim(),
+                start_date: formData.startDate,
+                description: formData.description.trim() || null,
                 color: formData.color,
-                created_at: new Date().toISOString(),
             };
-            setKohorten(prev => [...prev, newKohorte]);
+
+            if (editingId) {
+                const { error } = await supabase.from('kohorten').update(payload).eq('id', editingId);
+                if (error) throw error;
+            } else {
+                const { error } = await supabase.from('kohorten').insert([payload]);
+                if (error) throw error;
+            }
+
+            setIsEditing(false);
+            setEditingId(null);
+            await fetchKohorten();
+        } catch (error: any) {
+            console.error('Fehler beim Speichern:', error);
+            setErrorMessage(error?.message || 'Kohorte konnte nicht gespeichert werden.');
+        } finally {
+            setSaveLoading(false);
         }
-        setIsEditing(false);
-        setEditingId(null);
     };
 
-    const handleDelete = (id: string) => {
-        if (confirm('Kohorte wirklich löschen?')) {
-            setKohorten(prev => prev.filter(k => k.id !== id));
+    const handleDelete = async (id: string) => {
+        if (!confirm('Kohorte wirklich löschen?')) return;
+        try {
+            setErrorMessage('');
+
+            const clearRelation = await supabase
+                .from('profiles')
+                .update({ kohorte_id: null })
+                .eq('kohorte_id', id);
+
+            if (clearRelation.error && isMissingColumn(clearRelation.error, 'kohorte_id')) {
+                const fallback = await supabase
+                    .from('profiles')
+                    .update({ kohorte: null })
+                    .eq('kohorte', id);
+                if (fallback.error && !isMissingColumn(fallback.error, 'kohorte')) throw fallback.error;
+            } else if (clearRelation.error) {
+                throw clearRelation.error;
+            }
+
+            const { error } = await supabase.from('kohorten').delete().eq('id', id);
+            if (error) throw error;
+            await fetchKohorten();
+        } catch (error: any) {
+            console.error('Fehler beim Löschen:', error);
+            setErrorMessage(error?.message || 'Kohorte konnte nicht gelöscht werden.');
         }
     };
+
+    if (loading) {
+        return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-vastu-dark" size={36} /></div>;
+    }
 
     return (
         <div className="max-w-5xl mx-auto animate-fade-in">
+            {errorMessage && (
+                <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {errorMessage}
+                </div>
+            )}
             <div className="flex items-center justify-between mb-8">
                 <div>
                     <h1 className="text-3xl font-serif text-vastu-dark">Kohorten</h1>
@@ -138,11 +249,11 @@ export default function ManageKohorten() {
                             </button>
                             <button
                                 onClick={handleSave}
-                                disabled={!formData.name || !formData.startDate}
+                                disabled={!formData.name || !formData.startDate || saveLoading}
                                 className="flex items-center gap-2 bg-vastu-dark text-white px-5 py-2.5 rounded-lg hover:bg-vastu-dark-deep transition-colors disabled:opacity-40"
                             >
-                                <Save size={16} />
-                                Speichern
+                                {saveLoading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                                {saveLoading ? 'Speichert...' : 'Speichern'}
                             </button>
                         </div>
                     </div>
@@ -166,7 +277,7 @@ export default function ManageKohorten() {
                                         <h3 className="font-serif text-lg font-medium text-vastu-dark">{k.name}</h3>
                                         <div className="flex items-center gap-1.5 text-sm text-gray-500">
                                             <Calendar size={13} />
-                                            Start: {new Date(k.startDate).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                            Start: {new Date(k.startDate || k.start_date || Date.now()).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}
                                         </div>
                                     </div>
                                 </div>
@@ -187,7 +298,7 @@ export default function ManageKohorten() {
                             {/* Mock student count */}
                             <div className="flex items-center gap-2 text-sm text-vastu-dark/60 bg-gray-50 rounded-lg px-3 py-2">
                                 <Users size={14} />
-                                <span>{k.id === 'k1' ? '4' : '0'} Teilnehmer zugewiesen</span>
+                                <span>{studentCountByKohorte[k.id] || 0} Teilnehmer zugewiesen</span>
                             </div>
                         </div>
                     </div>

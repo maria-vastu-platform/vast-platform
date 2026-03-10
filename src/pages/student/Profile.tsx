@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { User, Camera, Save, Lock, Loader2, X, ZoomIn, ZoomOut, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Cropper from 'react-easy-crop';
-import { getCroppedImg } from '../../lib/utils';
+import { getCroppedImg, navigateBackOr } from '../../lib/utils';
 
 export default function Profile() {
     const { user, loading: authLoading } = useAuth();
@@ -119,7 +119,7 @@ export default function Profile() {
         <div className="max-w-2xl mx-auto space-y-8 animate-fade-in relative">
             {/* Back Navigation */}
             <button
-                onClick={() => navigate(-1)}
+                onClick={() => navigateBackOr(navigate, '/student')}
                 className="inline-flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors group text-sm font-sans"
             >
                 <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />

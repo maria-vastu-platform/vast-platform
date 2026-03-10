@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Play, ChevronRight, FileText, Loader2, CheckCircle2, Download, Lock, Gift, Video, ArrowLeft, ExternalLink } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useModules } from '../../hooks/useCourse';
-import { parseCategorizedLink } from '../../lib/utils';
+import { navigateBackOr, parseCategorizedLink } from '../../lib/utils';
 import { supabase } from '../../lib/supabase';
 import { Material } from '../../lib/types';
 
@@ -97,7 +97,7 @@ export default function StudentDashboard() {
         <div className="animate-fade-in space-y-4">
             {/* Back Navigation */}
             <button
-                onClick={() => navigate(-1)}
+                onClick={() => navigateBackOr(navigate, '/student/welcome')}
                 className="inline-flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors group text-sm font-sans"
             >
                 <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
