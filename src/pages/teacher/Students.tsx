@@ -52,10 +52,25 @@ export default function Students() {
         fetchStudents();
     }, []);
 
-    const assignKohorte = (studentId: string, kohorteId: string) => {
+    const assignKohorte = async (studentId: string, kohorteId: string) => {
+        // Optimistic UI update
+        const previous = students;
         setStudents(prev => prev.map(s =>
             s.id === studentId ? { ...s, kohorte_id: kohorteId || undefined } : s
         ));
+
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ kohorte_id: kohorteId || null })
+                .eq('id', studentId);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Fehler beim Zuweisen der Kohorte:', error);
+            setStudents(previous); // Revert on error
+            alert('Fehler beim Speichern der Kohorte. Bitte versuche es erneut.');
+        }
     };
 
     if (loading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-vastu-dark" size={40} /></div>;

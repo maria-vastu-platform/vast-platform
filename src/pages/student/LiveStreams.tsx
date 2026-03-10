@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { LiveStream } from '../../lib/types';
 import { Calendar, Clock, Video, Youtube, ArrowLeft } from 'lucide-react';
@@ -39,7 +39,7 @@ const VideoPlayer = ({ youtubeUrl, rutubeUrl, title }: { youtubeUrl?: string, ru
                         className={cn(
                             "px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2",
                             activeSource === 'rutube'
-                                ? "bg-white text-[#00A551] shadow-sm" // Rutube green color
+                                ? "bg-white text-[#00A551] shadow-sm"
                                 : "text-gray-500 hover:text-gray-700"
                         )}
                     >
@@ -62,7 +62,7 @@ const VideoPlayer = ({ youtubeUrl, rutubeUrl, title }: { youtubeUrl?: string, ru
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-white/50">
                         <Video size={48} />
-                        <span className="ml-2">Видео недоступно</span>
+                        <span className="ml-2">Video nicht verfügbar</span>
                     </div>
                 )}
             </div>
@@ -75,6 +75,7 @@ export default function LiveStreams() {
     const [loading, setLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState<string>('all');
     const navigate = useNavigate();
+    const playerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         fetchStreams();
@@ -96,7 +97,7 @@ export default function LiveStreams() {
         }
     };
 
-    if (loading) return <div className="p-8 text-center">Загрузка трансляций...</div>;
+    if (loading) return <div className="p-8 text-center">Live-Übertragungen werden geladen...</div>;
 
     const upcomingStreams = streams.filter(s => new Date(s.date) > new Date());
     const pastStreams = streams.filter(s => new Date(s.date) <= new Date());
@@ -107,6 +108,15 @@ export default function LiveStreams() {
         const monthKey = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, '0')}`;
         return monthKey === selectedMonth;
     });
+
+    const handleGoToStream = (stream: LiveStream) => {
+        const url = stream.video_url || stream.rutube_url;
+        if (url) {
+            window.open(url, '_blank');
+        } else if (playerRef.current) {
+            playerRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
 
     return (
         <div className="space-y-12 animate-fade-in">
@@ -121,7 +131,7 @@ export default function LiveStreams() {
 
             {/* Header */}
             <div>
-                <h1 className="font-serif text-3xl text-vastu-dark mb-2">Прямые Эфиры</h1>
+                <h1 className="font-serif text-3xl text-vastu-dark mb-2">Live-Übertragungen</h1>
             </div>
 
             {/* Upcoming Stream (Featured) */}
@@ -136,7 +146,7 @@ export default function LiveStreams() {
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                                 </span>
-                                Скоро в эфире
+                                Demnächst live
                             </div>
                             <h2 className="font-serif text-2xl text-vastu-dark mb-4">
                                 {upcomingStreams[0].title}
@@ -148,21 +158,24 @@ export default function LiveStreams() {
                             <div className="flex flex-wrap gap-4 mb-8">
                                 <div className="flex items-center gap-2 text-gray-500">
                                     <Calendar className="w-5 h-5" />
-                                    <span>{new Date(upcomingStreams[0].date).toLocaleDateString('ru-RU')}</span>
+                                    <span>{new Date(upcomingStreams[0].date).toLocaleDateString('de-DE')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-gray-500">
                                     <Clock className="w-5 h-5" />
-                                    <span>{new Date(upcomingStreams[0].date).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</span>
+                                    <span>{new Date(upcomingStreams[0].date).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr</span>
                                 </div>
                             </div>
 
-                            <button className="px-6 py-3 bg-vastu-dark text-white rounded-xl hover:bg-vastu-dark-deep transition-colors flex items-center gap-2">
+                            <button
+                                onClick={() => handleGoToStream(upcomingStreams[0])}
+                                className="px-6 py-3 bg-vastu-dark text-white rounded-xl hover:bg-vastu-dark-deep transition-colors flex items-center gap-2"
+                            >
                                 <Video className="w-5 h-5" />
-                                Перейти к трансляции
+                                Zur Übertragung
                             </button>
                         </div>
 
-                        <div className="rounded-xl overflow-hidden shadow-lg">
+                        <div ref={playerRef} className="rounded-xl overflow-hidden shadow-lg">
                             <VideoPlayer
                                 youtubeUrl={upcomingStreams[0].video_url}
                                 rutubeUrl={upcomingStreams[0].rutube_url}
@@ -183,14 +196,14 @@ export default function LiveStreams() {
                         onChange={(e) => setSelectedMonth(e.target.value)}
                         className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-vastu-dark focus:outline-none focus:border-vastu-gold"
                     >
-                        <option value="all">Все месяцы</option>
+                        <option value="all">Alle Monate</option>
                         {Array.from(new Set(streams.map(s => {
                             const date = new Date(s.date);
                             return `${date.getFullYear()}-${String(date.getMonth()).padStart(2, '0')}`;
                         }))).sort().reverse().map(monthKey => {
                             const [year, monthIndex] = monthKey.split('-');
                             const date = new Date(parseInt(year), parseInt(monthIndex));
-                            const label = date.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+                            const label = date.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
                             return (
                                 <option key={monthKey} value={monthKey}>
                                     {label.charAt(0).toUpperCase() + label.slice(1)}
@@ -212,7 +225,7 @@ export default function LiveStreams() {
 
                                 <div className="p-6">
                                     <div className="text-sm text-gray-500 mb-2">
-                                        {new Date(stream.date).toLocaleDateString('ru-RU')}
+                                        {new Date(stream.date).toLocaleDateString('de-DE')}
                                     </div>
                                     <h4 className="font-serif text-lg text-vastu-dark mb-2">{stream.title}</h4>
                                     <p className="text-sm text-gray-500 line-clamp-2">
@@ -223,7 +236,7 @@ export default function LiveStreams() {
                         ))
                     ) : (
                         <div className="col-span-full py-10 text-center text-gray-400 italic">
-                            Нет эфиров за этот период
+                            Keine Übertragungen in diesem Zeitraum
                         </div>
                     )}
                 </div>
