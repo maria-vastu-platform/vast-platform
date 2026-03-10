@@ -142,8 +142,8 @@ export default function StudentDashboard() {
                         {totalCount > 0 && (
                             <div className="max-w-md">
                                 <div className="flex justify-between text-sm font-sans mb-2">
-                                    <span className="text-white/45">Fortschritt</span>
-                                    <span className="text-vastu-gold font-medium">{completedCount}/{totalCount} Lektionen</span>
+                                    <span className="text-white/80 font-medium">Fortschritt</span>
+                                    <span className="text-white font-semibold">{completedCount}/{totalCount} Lektionen</span>
                                 </div>
                                 <div className={`h-2 bg-white/10 rounded-full overflow-hidden ${progressPercent > 0 ? 'progress-glow active' : ''}`}>
                                     <div

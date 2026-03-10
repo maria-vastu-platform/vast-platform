@@ -21,6 +21,7 @@ export default function WelcomePage() {
         zoom_link?: string;
         telegram_link?: string;
         vastu_map_link?: string;
+        instruction_url?: string;
     } | null>(null);
     const welcomeVideoUrl = settings?.welcome_video_url?.trim() || '';
     const isVimeoWelcomeVideo = welcomeVideoUrl.includes('vimeo.com');
@@ -352,10 +353,18 @@ export default function WelcomePage() {
                 <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 p-6 md:p-8">
                     <h3 className="font-serif text-xl text-vastu-dark mb-4">📋 Hilfreiche Anleitungen</h3>
                     <div className="grid md:grid-cols-1 gap-4">
-                        <div className="bg-vastu-cream rounded-xl p-5 border border-vastu-sand/30 accent-bar-left">
-                            <h4 className="font-serif font-medium text-vastu-dark mb-1">Vimeo Untertitel nutzen</h4>
+                        <a
+                            href={settings?.instruction_url || '#'}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={`bg-vastu-cream rounded-xl p-5 border border-vastu-sand/30 accent-bar-left group transition-all ${settings?.instruction_url
+                                    ? 'hover:border-vastu-gold/40 hover:shadow-md cursor-pointer'
+                                    : 'opacity-60 pointer-events-none'
+                                }`}
+                        >
+                            <h4 className="font-serif font-medium text-vastu-dark mb-1 group-hover:text-vastu-gold transition-colors">Vimeo Untertitel nutzen</h4>
                             <p className="text-sm font-body text-vastu-text-light">Erfahre, wie du Untertitel in Vimeo aktivierst und anpasst.</p>
-                        </div>
+                        </a>
                     </div>
                 </div>
 
