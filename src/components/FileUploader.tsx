@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
 import { Upload, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -11,6 +11,8 @@ interface FileUploaderProps {
 
 export default function FileUploader({ onUploadComplete, folder = 'general', label, compact = false }: FileUploaderProps) {
     const [uploading, setUploading] = useState(false);
+    const uniqueId = useId();
+    const inputId = `file-upload-${folder}-${uniqueId}`;
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return;
@@ -33,7 +35,6 @@ export default function FileUploader({ onUploadComplete, folder = 'general', lab
                 .from('course-content')
                 .getPublicUrl(filePath);
 
-            // Determine type
             // Determine type based on DB constraints: 'video', 'pdf', 'pptx', 'doc', 'link', 'zip'
             let type = 'doc';
             const ext = fileExt?.toLowerCase() || '';
@@ -43,7 +44,6 @@ export default function FileUploader({ onUploadComplete, folder = 'general', lab
             else if (['zip', 'rar', '7z'].includes(ext)) type = 'zip';
             else if (['pptx', 'ppt'].includes(ext)) type = 'pptx';
             else if (['doc', 'docx'].includes(ext)) type = 'doc';
-            // Map images and others to 'doc' to satisfy DB constraint for now
             else if (['jpg', 'png', 'jpeg', 'webp'].includes(ext)) type = 'doc';
 
             onUploadComplete(publicUrl, type, file.name);
@@ -60,13 +60,13 @@ export default function FileUploader({ onUploadComplete, folder = 'general', lab
             <div className="relative inline-block">
                 <input
                     type="file"
-                    id={`file-upload-${folder}-${Math.floor(Math.random() * 1000)}`}
+                    id={inputId}
                     className="hidden"
                     onChange={handleFileChange}
                     disabled={uploading}
                 />
                 <label
-                    htmlFor={`file-upload-${folder}-${Math.floor(Math.random() * 1000)}`} // Unique ID
+                    htmlFor={inputId}
                     className="px-3 py-2 bg-white border border-dashed border-gray-300 rounded-lg text-xs text-gray-500 hover:border-vastu-accent hover:text-vastu-accent cursor-pointer flex items-center gap-2 transition-colors"
                 >
                     {uploading ? <Loader2 className="animate-spin" size={14} /> : <Upload size={14} />}
@@ -80,13 +80,13 @@ export default function FileUploader({ onUploadComplete, folder = 'general', lab
         <div className="relative">
             <input
                 type="file"
-                id={`file-upload-${folder}`}
+                id={inputId}
                 className="hidden"
                 onChange={handleFileChange}
                 disabled={uploading}
             />
             <label
-                htmlFor={`file-upload-${folder}`} // Unique ID
+                htmlFor={inputId}
                 className="flex flex-col items-center justify-center gap-3 px-6 py-8 bg-gray-50 hover:bg-vastu-accent/5 border-2 border-dashed border-gray-300 hover:border-vastu-accent/50 rounded-xl cursor-pointer transition-all group w-full"
             >
                 <div className="p-3 bg-white rounded-full shadow-sm group-hover:scale-110 transition-transform">
