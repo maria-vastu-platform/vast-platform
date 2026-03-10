@@ -52,14 +52,14 @@ export default function LektionView() {
         // Next lesson in same module
         if (lekIdx < mod.lektionen.length - 1) {
             const next = mod.lektionen[lekIdx + 1];
-            return { type: 'lesson' as const, label: next.title, path: `/student/lektion/${moduleId}/${next.id}` };
+            return { type: 'lesson' as const, label: next.title, path: `/student/module/${moduleId}/lektion/${next.id}` };
         }
 
         // First lesson of next module
         if (modIdx < modules.length - 1) {
             const nextMod = modules[modIdx + 1];
             if (nextMod.lektionen.length > 0 && !nextMod.isLocked) {
-                return { type: 'module' as const, label: nextMod.title, path: `/student/lektion/${nextMod.id}/${nextMod.lektionen[0].id}` };
+                return { type: 'module' as const, label: nextMod.title, path: `/student/module/${nextMod.id}/lektion/${nextMod.lektionen[0].id}` };
             }
         }
 
