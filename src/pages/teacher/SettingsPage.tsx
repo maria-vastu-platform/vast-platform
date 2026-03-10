@@ -205,7 +205,7 @@ export default function SettingsPage() {
                         <div className="pt-2 border-t border-vastu-sand/30">
                             <label className="block text-sm font-sans font-medium text-vastu-dark mt-4 mb-1.5 flex items-center gap-2">
                                 <Map size={16} className="text-vastu-gold" />
-                                Vastu Karte Vastoos Link
+                                Vastu Karte Erstellung Link
                             </label>
                             <input
                                 type="url"
