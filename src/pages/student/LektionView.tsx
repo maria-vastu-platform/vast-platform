@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { FileText, Download, Loader2, BookOpen, CheckCircle2, ChevronRight, Home, ArrowLeft, ExternalLink } from 'lucide-react';
-import { useLektion } from '../../hooks/useCourse';
+import { FileText, Download, Loader2, BookOpen, CheckCircle2, ChevronRight, Home, ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
+import { useLektion, useModules } from '../../hooks/useCourse';
 import { parseCategorizedLink } from '../../lib/utils';
 import { Material } from '../../lib/types';
 import VimeoPlayer from '../../components/VimeoPlayer';
@@ -37,7 +37,34 @@ export default function LektionView() {
     const [justCompleted, setJustCompleted] = useState(false);
     const [descExpanded, setDescExpanded] = useState(false);
     const [hwChecks, setHwChecks] = useState<Record<number, boolean>>({});
+    const { modules } = useModules();
     const navigate = useNavigate();
+
+    // Compute next lesson / next module
+    const nextNav = (() => {
+        if (!modules.length || !moduleId || !lektionId) return null;
+        const modIdx = modules.findIndex(m => m.id === moduleId);
+        if (modIdx === -1) return null;
+        const mod = modules[modIdx];
+        const lekIdx = mod.lektionen.findIndex(l => l.id === lektionId);
+        if (lekIdx === -1) return null;
+
+        // Next lesson in same module
+        if (lekIdx < mod.lektionen.length - 1) {
+            const next = mod.lektionen[lekIdx + 1];
+            return { type: 'lesson' as const, label: next.title, path: `/student/lektion/${moduleId}/${next.id}` };
+        }
+
+        // First lesson of next module
+        if (modIdx < modules.length - 1) {
+            const nextMod = modules[modIdx + 1];
+            if (nextMod.lektionen.length > 0 && !nextMod.isLocked) {
+                return { type: 'module' as const, label: nextMod.title, path: `/student/lektion/${nextMod.id}/${nextMod.lektionen[0].id}` };
+            }
+        }
+
+        return null; // Last lesson of last module
+    })();
 
     // Load homework checks from Supabase (syncs across devices)
     useEffect(() => {
@@ -152,20 +179,6 @@ export default function LektionView() {
                     <div className="absolute top-0 right-0 w-64 h-64 bg-vastu-dark opacity-5 rounded-full blur-[80px] translate-x-1/3 -translate-y-1/3" />
                     <div className="relative z-10">
                         <h1 className="text-2xl md:text-4xl font-serif mb-2 text-vastu-dark">{lektion.title}</h1>
-                        {lektion.description && (
-                            <div>
-                                <div
-                                    className={`text-vastu-dark/50 font-body leading-relaxed max-w-2xl text-base prose prose-sm ${!descExpanded ? 'line-clamp-3' : ''}`}
-                                    dangerouslySetInnerHTML={{ __html: lektion.description }}
-                                />
-                                <button
-                                    onClick={() => setDescExpanded(!descExpanded)}
-                                    className="text-vastu-dark/70 hover:text-vastu-dark text-sm font-sans mt-2 underline underline-offset-2 transition-colors"
-                                >
-                                    {descExpanded ? 'Weniger anzeigen' : 'Mehr anzeigen...'}
-                                </button>
-                            </div>
-                        )}
                     </div>
                 </div>
 
@@ -199,6 +212,24 @@ export default function LektionView() {
                                 </div>
                             );
                         })}
+                    </div>
+                )}
+
+                {/* Description — below video */}
+                {lektion.description && (
+                    <div className="px-6 md:px-8 pb-4">
+                        <div>
+                            <div
+                                className={`text-vastu-text font-body leading-relaxed max-w-2xl text-base prose prose-sm ${!descExpanded ? 'line-clamp-4' : ''}`}
+                                dangerouslySetInnerHTML={{ __html: lektion.description }}
+                            />
+                            <button
+                                onClick={() => setDescExpanded(!descExpanded)}
+                                className="text-vastu-gold hover:text-vastu-dark text-sm font-sans mt-2 underline underline-offset-2 transition-colors"
+                            >
+                                {descExpanded ? 'Weniger anzeigen' : 'Mehr anzeigen...'}
+                            </button>
+                        </div>
                     </div>
                 )}
 
@@ -380,6 +411,30 @@ export default function LektionView() {
                         ))}
                     </div>
                 </div>
+            )}
+
+            {/* Next Lesson / Module Button */}
+            {nextNav ? (
+                <button
+                    onClick={() => navigate(nextNav.path)}
+                    className="w-full flex items-center justify-between p-5 bg-vastu-dark text-white rounded-2xl hover:bg-vastu-dark-deep shadow-lg shadow-vastu-dark/10 transition-all group"
+                >
+                    <div className="text-left">
+                        <div className="text-xs font-sans text-white/60 uppercase tracking-wider mb-1">
+                            {nextNav.type === 'lesson' ? 'Nächste Lektion' : 'Nächstes Modul'}
+                        </div>
+                        <div className="font-serif text-lg">{nextNav.label}</div>
+                    </div>
+                    <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+            ) : (
+                <button
+                    onClick={() => navigate('/student')}
+                    className="w-full flex items-center justify-center gap-3 p-5 bg-vastu-cream text-vastu-dark rounded-2xl hover:bg-vastu-sand/30 border border-vastu-sand/50 transition-all"
+                >
+                    <Home size={20} />
+                    <span className="font-serif text-lg">Zurück zur Kursübersicht</span>
+                </button>
             )}
         </div>
     );
