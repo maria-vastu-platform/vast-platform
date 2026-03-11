@@ -1,9 +1,11 @@
 import { Outlet, Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { LogOut, User as UserIcon, Menu, X, Loader2, BookOpen, Library, Lock, ChevronDown, ChevronRight, Home, Smartphone } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../contexts/AuthContext';
 import { useModules } from '../../hooks/useCourse';
+import { supabase } from '../../lib/supabase';
+import DisclaimerModal from '../DisclaimerModal';
 
 const NavItem = ({ to, icon: Icon, label, isActive, onClick }: { to: string; icon: any; label: string; isActive: boolean; onClick?: () => void }) => (
     <Link
@@ -29,6 +31,24 @@ export default function StudentLayout() {
     const { user, signOut, loading: authLoading, role } = useAuth();
     const { modules, loading: modulesLoading } = useModules();
     const displayName = user?.user_metadata?.full_name || user?.email || 'Teilnehmer';
+    const [disclaimerAccepted, setDisclaimerAccepted] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        if (!user) return;
+        supabase
+            .from('profiles')
+            .select('disclaimer_accepted_at')
+            .eq('id', user.id)
+            .single()
+            .then(({ data, error }) => {
+                if (error) {
+                    // If column doesn't exist yet, treat as accepted to not block
+                    setDisclaimerAccepted(true);
+                    return;
+                }
+                setDisclaimerAccepted(!!data?.disclaimer_accepted_at);
+            });
+    }, [user]);
 
     const searchParams = new URLSearchParams(location.search);
     const activeModuleId = searchParams.get('module');
@@ -263,6 +283,14 @@ export default function StudentLayout() {
                     <Outlet />
                 </div>
             </main>
+
+            {/* Disclaimer Modal */}
+            {disclaimerAccepted === false && user && (
+                <DisclaimerModal
+                    userId={user.id}
+                    onAccepted={() => setDisclaimerAccepted(true)}
+                />
+            )}
         </div>
     );
 }
