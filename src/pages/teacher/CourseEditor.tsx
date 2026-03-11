@@ -132,10 +132,10 @@ const LektionEditor = ({ lektion, moduleId, onDelete, onUpdate, onMoveUp, onMove
                 .eq('id', lektion.id);
             if (error) throw error;
             onUpdate();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Fehler beim Ändern der Sichtbarkeit:', error);
             setLocal(prev => ({ ...prev, is_visible: !newVal })); // revert
-            alert('Fehler beim Ändern der Sichtbarkeit.');
+            alert(`Fehler beim Ändern der Sichtbarkeit: ${error?.message || 'Unbekannter Fehler'}`);
         }
     };
 
