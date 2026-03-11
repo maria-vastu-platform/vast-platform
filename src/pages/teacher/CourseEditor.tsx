@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Plus, Trash2, ChevronDown, ChevronRight, FileText, Video, X, Save, Loader2, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, FileText, Video, X, Save, Loader2, ArrowUp, ArrowDown, Eye, EyeOff } from 'lucide-react';
 import FileUploader from '../../components/FileUploader';
 import AddLinkModal from '../../components/AddLinkModal';
 import ReactQuill from 'react-quill';
@@ -24,6 +24,7 @@ interface Lektion {
     homework_description?: string;
     vimeo_url?: string;
     date?: string;
+    is_visible?: boolean;
     materials?: Material[];
 }
 
@@ -119,8 +120,27 @@ const LektionEditor = ({ lektion, moduleId, onDelete, onUpdate, onMoveUp, onMove
         ],
     };
 
+    const isVisible = local.is_visible !== false; // default true
+
+    const toggleVisibility = async () => {
+        const newVal = !isVisible;
+        setLocal(prev => ({ ...prev, is_visible: newVal }));
+        try {
+            const { error } = await supabase
+                .from('days')
+                .update({ is_visible: newVal })
+                .eq('id', lektion.id);
+            if (error) throw error;
+            onUpdate();
+        } catch (error) {
+            console.error('Fehler beim Ändern der Sichtbarkeit:', error);
+            setLocal(prev => ({ ...prev, is_visible: !newVal })); // revert
+            alert('Fehler beim Ändern der Sichtbarkeit.');
+        }
+    };
+
     return (
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm transition-all hover:border-vastu-accent/50 hover:shadow-md">
+        <div className={`bg-white p-6 rounded-xl border shadow-sm transition-all hover:shadow-md ${isVisible ? 'border-gray-200 hover:border-vastu-accent/50' : 'border-orange-200 bg-orange-50/30 opacity-75'}`}>
             <div className="flex justify-between items-start mb-6">
                 <div className="flex-1 mr-4 space-y-6">
                     {/* Header */}
@@ -207,6 +227,13 @@ const LektionEditor = ({ lektion, moduleId, onDelete, onUpdate, onMoveUp, onMove
 
                 {/* Sidebar Actions */}
                 <div className="flex flex-col gap-2 sticky top-4">
+                    <button
+                        onClick={toggleVisibility}
+                        className={`p-2 rounded-lg transition-colors ${isVisible ? 'bg-green-50 text-green-600 hover:bg-green-100' : 'bg-orange-50 text-orange-500 hover:bg-orange-100'}`}
+                        title={isVisible ? 'Lektion ist sichtbar (klicken zum Verbergen)' : 'Lektion ist verborgen (klicken zum Anzeigen)'}
+                    >
+                        {isVisible ? <Eye size={20} /> : <EyeOff size={20} />}
+                    </button>
                     <button
                         onClick={handleSave}
                         disabled={!isDirty || saving}

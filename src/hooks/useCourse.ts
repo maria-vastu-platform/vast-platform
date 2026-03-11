@@ -60,6 +60,7 @@ export function useModules() {
                             : (w.available_from ? new Date(w.available_from) > new Date() : false),
                         availableFrom: w.available_from,
                         lektionen: w.days
+                            .filter((d: any) => d.is_visible !== false)
                             .sort((a: any, b: any) => a.order_index - b.order_index)
                             .map((d: any) => ({
                                 id: d.id,
