@@ -23,7 +23,7 @@ export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalP
     const [pdfChecked, setPdfChecked] = useState(false);
     
     // Hardcoded static URL
-    const pdfUrl = '/ausbildungsvertrag.pdf';
+    const documentUrl = '/ausbildungsvertrag.png';
     
     const [checked, setChecked] = useState<Record<number, boolean>>({});
     const [submitting, setSubmitting] = useState(false);
@@ -90,9 +90,9 @@ export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalP
                     <>
                         <div className="flex-1 overflow-y-auto p-8 flex flex-col items-center justify-center space-y-8">
                             
-                            {/* PDF Link Box */}
+                            {/* Document Link Box */}
                             <a 
-                                href={pdfUrl}
+                                href={documentUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={() => {
@@ -105,8 +105,8 @@ export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalP
                                     <FileText className="text-vastu-accent" size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="font-serif text-lg text-vastu-dark group-hover:text-vastu-accent transition-colors">Ausbildungsvertrag öffnen</h3>
-                                    <p className="text-sm text-vastu-text-light font-body">Klicke hier, um das PDF zu lesen</p>
+                                    <h3 className="font-serif text-lg text-vastu-dark group-hover:text-vastu-accent transition-colors">Ausbildungsvertrag ansehen</h3>
+                                    <p className="text-sm text-vastu-text-light font-body">Klicke hier, um das Dokument zu lesen</p>
                                 </div>
                             </a>
 
