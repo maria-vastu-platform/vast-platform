@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { CheckCircle2, Loader2, FileText, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Loader2, FileText, ArrowRight, X } from 'lucide-react';
 
 const DISCLAIMER_ITEMS = [
     'Ich bestätige hiermit, dass ich alle Regeln & Bedingungen gelesen habe & akzeptiere',
@@ -21,6 +21,7 @@ interface DisclaimerModalProps {
 export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalProps) {
     const [step, setStep] = useState<1 | 2>(1);
     const [pdfChecked, setPdfChecked] = useState(false);
+    const [showDocument, setShowDocument] = useState(false);
     
     // Hardcoded static URL
     const documentUrl = '/ausbildungsvertrag.png';
@@ -91,15 +92,9 @@ export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalP
                         <div className="flex-1 overflow-y-auto p-8 flex flex-col items-center justify-center space-y-8">
                             
                             {/* Document Link Box */}
-                            <a 
-                                href={documentUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={() => {
-                                    // Normally we would just let it open in a new tab
-                                    // But if the file isn't uploaded yet, we show a warning (optional)
-                                }}
-                                className="w-full flex items-center gap-4 p-5 bg-vastu-cream/30 border border-vastu-sand/50 rounded-xl hover:bg-vastu-cream hover:border-vastu-gold/30 transition-all group"
+                            <button 
+                                onClick={() => setShowDocument(true)}
+                                className="w-full flex items-center gap-4 p-5 bg-vastu-cream/30 border border-vastu-sand/50 rounded-xl hover:bg-vastu-cream hover:border-vastu-gold/30 transition-all group text-left"
                             >
                                 <div className="w-12 h-12 bg-white rounded-lg shadow-sm flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                                     <FileText className="text-vastu-accent" size={24} />
@@ -108,7 +103,7 @@ export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalP
                                     <h3 className="font-serif text-lg text-vastu-dark group-hover:text-vastu-accent transition-colors">Ausbildungsvertrag ansehen</h3>
                                     <p className="text-sm text-vastu-text-light font-body">Klicke hier, um das Dokument zu lesen</p>
                                 </div>
-                            </a>
+                            </button>
 
                             {/* Single Checkbox */}
                             <button
@@ -207,6 +202,28 @@ export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalP
                     </>
                 )}
             </div>
+
+            {/* Full Screen Document Viewer Overlay */}
+            {showDocument && (
+                <div className="fixed inset-0 z-[110] bg-black/90 flex flex-col animate-fade-in">
+                    <div className="flex justify-end p-4 shrink-0">
+                        <button 
+                            onClick={() => setShowDocument(false)}
+                            className="bg-white/10 hover:bg-white/20 p-3 rounded-full text-white transition-colors"
+                            aria-label="Schließen"
+                        >
+                            <X size={24} />
+                        </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto px-4 pb-12 flex justify-center items-start">
+                        <img 
+                            src={documentUrl} 
+                            alt="Ausbildungsvertrag" 
+                            className="max-w-full md:max-w-3xl rounded-lg shadow-2xl" 
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
