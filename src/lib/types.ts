@@ -58,6 +58,17 @@ export interface LiveStream {
     created_at?: string;
 }
 
+export interface PlatformSettings {
+    id: boolean;
+    welcome_video_url?: string | null;
+    zoom_link?: string | null;
+    telegram_link?: string | null;
+    vastu_map_link?: string | null;
+    instruction_url?: string | null;
+    disclaimer_pdf_url?: string | null;
+    updated_at: string;
+}
+
 export interface StreamComment {
     id: string;
     stream_id: string;

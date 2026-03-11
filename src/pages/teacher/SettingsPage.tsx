@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Loader2, Save, Video, Link as LinkIcon, Map, MessageCircle, BookOpen } from 'lucide-react';
+import { Loader2, Save, Video, Link as LinkIcon, Map, MessageCircle, BookOpen, FileText } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getVideoEmbedUrl } from '../../lib/utils';
 
@@ -26,6 +26,7 @@ export default function SettingsPage() {
     const [telegramLink, setTelegramLink] = useState('');
     const [vastuMapLink, setVastuMapLink] = useState('');
     const [instructionUrl, setInstructionUrl] = useState('');
+    const [disclaimerPdfUrl, setDisclaimerPdfUrl] = useState('');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState({ text: '', type: '' });
@@ -38,6 +39,7 @@ export default function SettingsPage() {
                 setZoomLink('https://zoom.us');
                 setTelegramLink('https://t.me');
                 setVastuMapLink('https://www.vastusphere.net');
+                setDisclaimerPdfUrl('https://example.com/vertrag.pdf');
                 setLoading(false);
                 return;
             }
@@ -58,6 +60,7 @@ export default function SettingsPage() {
                     setTelegramLink(data.telegram_link || '');
                     setVastuMapLink(data.vastu_map_link || 'https://www.vastusphere.net');
                     setInstructionUrl(data.instruction_url || '');
+                    setDisclaimerPdfUrl(data.disclaimer_pdf_url || '');
                 }
             } catch (err) {
                 console.error('Error loading settings:', err);
@@ -95,6 +98,7 @@ export default function SettingsPage() {
                     telegram_link: telegramLink,
                     vastu_map_link: vastuMapLink,
                     instruction_url: instructionUrl,
+                    disclaimer_pdf_url: disclaimerPdfUrl,
                     updated_at: new Date().toISOString()
                 });
 
@@ -230,6 +234,21 @@ export default function SettingsPage() {
                                 className="w-full px-4 py-3 bg-white border border-vastu-sand rounded-xl focus:ring-2 focus:ring-vastu-gold/40 focus:border-vastu-gold transition-all outline-none font-body text-base"
                             />
                             <p className="text-xs text-vastu-text-light mt-1.5 italic">Wird als klickbarer Link im Bereich „Hilfreiche Anleitungen" angezeigt.</p>
+                        </div>
+
+                        <div className="pt-2 border-t border-vastu-sand/30">
+                            <label className="block text-sm font-sans font-medium text-vastu-dark mt-4 mb-1.5 flex items-center gap-2">
+                                <FileText size={16} className="text-vastu-accent" />
+                                Ausbildungsvertrag (PDF Link)
+                            </label>
+                            <input
+                                type="url"
+                                value={disclaimerPdfUrl}
+                                onChange={(e) => setDisclaimerPdfUrl(e.target.value)}
+                                placeholder="https://..."
+                                className="w-full px-4 py-3 bg-white border border-vastu-sand rounded-xl focus:ring-2 focus:ring-vastu-gold/40 focus:border-vastu-gold transition-all outline-none font-body text-base"
+                            />
+                            <p className="text-xs text-vastu-text-light mt-1.5 italic">Link zum PDF-Vertrag, der neuen Schülern vor dem ersten Login angezeigt wird.</p>
                         </div>
                     </div>
                 </div>
