@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { CheckCircle2, Loader2, FileText, ArrowRight } from 'lucide-react';
 
@@ -21,23 +21,12 @@ interface DisclaimerModalProps {
 export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalProps) {
     const [step, setStep] = useState<1 | 2>(1);
     const [pdfChecked, setPdfChecked] = useState(false);
-    const [pdfUrl, setPdfUrl] = useState<string>('#');
+    
+    // Hardcoded static URL
+    const pdfUrl = '/ausbildungsvertrag.pdf';
     
     const [checked, setChecked] = useState<Record<number, boolean>>({});
     const [submitting, setSubmitting] = useState(false);
-
-    // Fetch the PDF URL from platform settings
-    useEffect(() => {
-        supabase
-            .from('platform_settings')
-            .select('disclaimer_pdf_url')
-            .single()
-            .then(({ data }) => {
-                if (data?.disclaimer_pdf_url) {
-                    setPdfUrl(data.disclaimer_pdf_url);
-                }
-            });
-    }, []);
 
     const allChecked = DISCLAIMER_ITEMS.every((_, i) => checked[i]);
 
@@ -106,11 +95,9 @@ export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalP
                                 href={pdfUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                onClick={(e) => {
-                                    if (!pdfUrl || pdfUrl === '#' || pdfUrl === 'https://example.com/vertrag.pdf') {
-                                        e.preventDefault();
-                                        alert('Das PDF wird noch hochgeladen! Bitte setze den Link in den Admin-Einstellungen.');
-                                    }
+                                onClick={() => {
+                                    // Normally we would just let it open in a new tab
+                                    // But if the file isn't uploaded yet, we show a warning (optional)
                                 }}
                                 className="w-full flex items-center gap-4 p-5 bg-vastu-cream/30 border border-vastu-sand/50 rounded-xl hover:bg-vastu-cream hover:border-vastu-gold/30 transition-all group"
                             >

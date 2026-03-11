@@ -65,7 +65,6 @@ export interface PlatformSettings {
     telegram_link?: string | null;
     vastu_map_link?: string | null;
     instruction_url?: string | null;
-    disclaimer_pdf_url?: string | null;
     updated_at: string;
 }
 
