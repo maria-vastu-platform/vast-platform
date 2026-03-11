@@ -32,16 +32,23 @@ export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalP
         if (!allChecked) return;
         setSubmitting(true);
         try {
+            // Always save to localStorage first as fallback
+            localStorage.setItem(`disclaimer-accepted:${userId}`, 'true');
+
             const { error } = await supabase
                 .from('profiles')
                 .update({ disclaimer_accepted_at: new Date().toISOString() })
                 .eq('id', userId);
 
-            if (error) throw error;
+            if (error) {
+                console.warn('Supabase disclaimer save failed (using localStorage):', error.message);
+            }
+
             onAccepted();
         } catch (error) {
             console.error('Fehler beim Speichern der Vereinbarung:', error);
-            alert('Fehler beim Speichern. Bitte versuche es erneut.');
+            // Still proceed — localStorage has it saved
+            onAccepted();
         } finally {
             setSubmitting(false);
         }

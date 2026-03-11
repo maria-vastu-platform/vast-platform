@@ -35,6 +35,13 @@ export default function StudentLayout() {
 
     useEffect(() => {
         if (!user) return;
+
+        // Check localStorage first as fast path
+        if (localStorage.getItem(`disclaimer-accepted:${user.id}`) === 'true') {
+            setDisclaimerAccepted(true);
+            return;
+        }
+
         supabase
             .from('profiles')
             .select('disclaimer_accepted_at')
@@ -42,8 +49,8 @@ export default function StudentLayout() {
             .single()
             .then(({ data, error }) => {
                 if (error) {
-                    // If column doesn't exist yet, treat as accepted to not block
-                    setDisclaimerAccepted(true);
+                    // Column doesn't exist yet — show disclaimer
+                    setDisclaimerAccepted(false);
                     return;
                 }
                 setDisclaimerAccepted(!!data?.disclaimer_accepted_at);
