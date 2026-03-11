@@ -580,6 +580,7 @@ export default function CourseEditor() {
                         date: d.date,
                         order_index: d.order_index,
                         homework_description: d.homework_description,
+                        is_visible: d.is_visible,
                         materials: d.materials || []
                     })),
                     materials: w.materials || []
