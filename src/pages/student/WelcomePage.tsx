@@ -132,7 +132,7 @@ export default function WelcomePage() {
                 {/* Scroll hint */}
                 <div className="absolute bottom-8 inset-x-0 flex justify-center text-white/25 text-xs font-sans animate-fade-in" style={{ animationDelay: '0.8s' }}>
                     <div className="flex flex-col items-center gap-2">
-                        <span>Mehr erfahren</span>
+                        <span>Zu allen Infos</span>
                         <div className="w-px h-8 bg-gradient-to-b from-white/20 to-transparent" />
                     </div>
                 </div>
