@@ -126,16 +126,23 @@ const LektionEditor = ({ lektion, moduleId, onDelete, onUpdate, onMoveUp, onMove
         const newVal = !isVisible;
         setLocal(prev => ({ ...prev, is_visible: newVal }));
         try {
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('days')
                 .update({ is_visible: newVal })
-                .eq('id', lektion.id);
+                .eq('id', lektion.id)
+                .select();
+
             if (error) throw error;
+
+            if (!data || data.length === 0) {
+                throw new Error('Keine Berechtigung. Bitte RLS-Policy für die "days"-Tabelle prüfen.');
+            }
+
             onUpdate();
         } catch (error: any) {
             console.error('Fehler beim Ändern der Sichtbarkeit:', error);
-            setLocal(prev => ({ ...prev, is_visible: !newVal })); // revert
-            alert(`Fehler beim Ändern der Sichtbarkeit: ${error?.message || 'Unbekannter Fehler'}`);
+            setLocal(prev => ({ ...prev, is_visible: !newVal }));
+            alert(`Fehler: ${error?.message || 'Unbekannter Fehler'}\n\nBitte diese SQL in Supabase ausführen:\n\nCREATE POLICY "Teachers can update days" ON public.days FOR UPDATE USING (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.role = 'teacher'));`);
         }
     };
 
