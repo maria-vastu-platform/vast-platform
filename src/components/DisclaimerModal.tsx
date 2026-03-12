@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { CheckCircle2, Loader2, FileText, ArrowRight, X } from 'lucide-react';
+import { CheckCircle2, Loader2, FileText, ArrowRight } from 'lucide-react';
 
 const DISCLAIMER_ITEMS = [
     'Ich gehe die Ausbildung bis zum Ende durch',
@@ -20,10 +20,11 @@ interface DisclaimerModalProps {
 export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalProps) {
     const [step, setStep] = useState<1 | 2>(1);
     const [pdfChecked, setPdfChecked] = useState(false);
-    const [showDocument, setShowDocument] = useState(false);
+    const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
     
     // Hardcoded static URL
-    const documentUrl = '/ausbildungsvertrag.png';
+    const pdfUrl = '/ausbildungsvertrag.pdf';
     
     const [checked, setChecked] = useState<Record<number, boolean>>({});
     const [submitting, setSubmitting] = useState(false);
@@ -60,6 +61,13 @@ export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalP
         }
     };
 
+    const handleScroll = () => {
+        if (!scrollContainerRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+        const isBottom = Math.ceil(scrollTop + clientHeight) >= scrollHeight - 20;
+        setIsScrolledToBottom(isBottom);
+    };
+
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
@@ -91,18 +99,20 @@ export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalP
                         <div className="flex-1 overflow-y-auto p-8 flex flex-col items-center justify-center space-y-8">
                             
                             {/* Document Link Box */}
-                            <button 
-                                onClick={() => setShowDocument(true)}
+                            <a 
+                                href={pdfUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="w-full flex items-center gap-4 p-5 bg-vastu-cream/30 border border-vastu-sand/50 rounded-xl hover:bg-vastu-cream hover:border-vastu-gold/30 transition-all group text-left"
                             >
                                 <div className="w-12 h-12 bg-white rounded-lg shadow-sm flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                                     <FileText className="text-vastu-accent" size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="font-serif text-lg text-vastu-dark group-hover:text-vastu-accent transition-colors">Ausbildungsvertrag ansehen</h3>
-                                    <p className="text-sm text-vastu-text-light font-body">Klicke hier, um das Dokument zu lesen</p>
+                                    <h3 className="font-serif text-lg text-vastu-dark group-hover:text-vastu-accent transition-colors">Ausbildungsvertrag öffnen</h3>
+                                    <p className="text-sm text-vastu-text-light font-body">Klicke hier, um das PDF zu lesen</p>
                                 </div>
-                            </button>
+                            </a>
 
                             {/* Single Checkbox */}
                             <button
@@ -145,7 +155,11 @@ export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalP
                 {/* Step 2: Checklist */}
                 {step === 2 && (
                     <>
-                        <div className="flex-1 overflow-y-auto p-6 space-y-3">
+                        <div 
+                            ref={scrollContainerRef}
+                            onScroll={handleScroll}
+                            className="flex-1 overflow-y-auto p-6 space-y-3 relative"
+                        >
                             {DISCLAIMER_ITEMS.map((item, index) => (
                                 <button
                                     key={index}
@@ -171,7 +185,7 @@ export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalP
                                 </button>
                             ))}
                             
-                            <div className="sticky bottom-2 w-full flex justify-center pointer-events-none animate-bounce mt-4 pb-2 z-10">
+                            <div className={`sticky bottom-2 w-full flex justify-center pointer-events-none mt-4 pb-2 z-10 transition-opacity duration-300 ${isScrolledToBottom ? 'opacity-0' : 'opacity-100'}`}>
                                 <div className="bg-vastu-dark/80 backdrop-blur-sm text-white px-4 py-2 rounded-full flex items-center gap-2 text-xs shadow-lg font-sans">
                                     ⬇️ Nach unten scrollen
                                 </div>
@@ -207,28 +221,6 @@ export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalP
                     </>
                 )}
             </div>
-
-            {/* Full Screen Document Viewer Overlay */}
-            {showDocument && (
-                <div className="fixed inset-0 z-[110] bg-black/90 flex flex-col animate-fade-in">
-                    <div className="flex justify-end p-4 shrink-0">
-                        <button 
-                            onClick={() => setShowDocument(false)}
-                            className="bg-white/10 hover:bg-white/20 p-3 rounded-full text-white transition-colors"
-                            aria-label="Schließen"
-                        >
-                            <X size={24} />
-                        </button>
-                    </div>
-                    <div className="flex-1 overflow-y-auto px-4 pb-12 flex justify-center items-start">
-                        <img 
-                            src={documentUrl} 
-                            alt="Ausbildungsvertrag" 
-                            className="max-w-full md:max-w-3xl rounded-lg shadow-2xl" 
-                        />
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
