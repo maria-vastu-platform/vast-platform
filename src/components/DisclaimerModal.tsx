@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { CheckCircle2, Loader2, FileText, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Loader2, FileText, ArrowRight, X } from 'lucide-react';
 
 const DISCLAIMER_ITEMS = [
     'Ich gehe die Ausbildung bis zum Ende durch',
@@ -20,6 +20,7 @@ interface DisclaimerModalProps {
 export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalProps) {
     const [step, setStep] = useState<1 | 2>(1);
     const [pdfChecked, setPdfChecked] = useState(false);
+    const [showDocument, setShowDocument] = useState(false);
     const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     
@@ -99,20 +100,18 @@ export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalP
                         <div className="flex-1 overflow-y-auto p-8 flex flex-col items-center justify-center space-y-8">
                             
                             {/* Document Link Box */}
-                            <a 
-                                href={pdfUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                            <button 
+                                onClick={() => setShowDocument(true)}
                                 className="w-full flex items-center gap-4 p-5 bg-vastu-cream/30 border border-vastu-sand/50 rounded-xl hover:bg-vastu-cream hover:border-vastu-gold/30 transition-all group text-left"
                             >
                                 <div className="w-12 h-12 bg-white rounded-lg shadow-sm flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                                     <FileText className="text-vastu-accent" size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="font-serif text-lg text-vastu-dark group-hover:text-vastu-accent transition-colors">Ausbildungsvertrag öffnen</h3>
-                                    <p className="text-sm text-vastu-text-light font-body">Klicke hier, um das PDF zu lesen</p>
+                                    <h3 className="font-serif text-lg text-vastu-dark group-hover:text-vastu-accent transition-colors">Ausbildungsvertrag ansehen</h3>
+                                    <p className="text-sm text-vastu-text-light font-body">Klicke hier, um das Dokument zu lesen</p>
                                 </div>
-                            </a>
+                            </button>
 
                             {/* Single Checkbox */}
                             <button
@@ -221,6 +220,28 @@ export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalP
                     </>
                 )}
             </div>
+
+            {/* Full Screen Document Viewer Overlay */}
+            {showDocument && (
+                <div className="fixed inset-0 z-[110] bg-black/90 flex flex-col animate-fade-in">
+                    <div className="flex justify-end p-4 shrink-0 bg-transparent">
+                        <button 
+                            onClick={() => setShowDocument(false)}
+                            className="bg-white/10 hover:bg-white/20 p-3 rounded-full text-white transition-colors"
+                            aria-label="Schließen"
+                        >
+                            <X size={24} />
+                        </button>
+                    </div>
+                    <div className="flex-1 overflow-hidden px-2 pb-6 md:px-8 md:pb-8 flex justify-center items-center">
+                        <iframe 
+                            src={pdfUrl} 
+                            title="Ausbildungsvertrag" 
+                            className="w-full h-full max-w-5xl rounded-lg shadow-2xl bg-white" 
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
