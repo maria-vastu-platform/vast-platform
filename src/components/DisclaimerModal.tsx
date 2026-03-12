@@ -3,7 +3,6 @@ import { supabase } from '../lib/supabase';
 import { CheckCircle2, Loader2, FileText, ArrowRight, X } from 'lucide-react';
 
 const DISCLAIMER_ITEMS = [
-    'Ich bestätige hiermit, dass ich alle Regeln & Bedingungen gelesen habe & akzeptiere',
     'Ich gehe die Ausbildung bis zum Ende durch',
     'Ich gebe mir selbst, das Versprechen des Wissen aufzunehmen und umzusetzen',
     'Ich gehe die Ausbildung mit Liebe, Achtsamkeit, Langsamkeit durch & erlaube mir, Fehler zu machen',
@@ -215,12 +214,18 @@ export default function DisclaimerModal({ userId, onAccepted }: DisclaimerModalP
                             <X size={24} />
                         </button>
                     </div>
-                    <div className="flex-1 overflow-y-auto px-4 pb-12 flex justify-center items-start">
+                    <div className="flex-1 overflow-y-auto px-4 pb-12 flex justify-center items-start relative">
                         <img 
                             src={documentUrl} 
                             alt="Ausbildungsvertrag" 
                             className="max-w-full md:max-w-3xl rounded-lg shadow-2xl" 
                         />
+                        {/* Scroll hint inside the document overlay */}
+                        <div className="fixed bottom-6 left-0 right-0 flex justify-center pointer-events-none animate-bounce">
+                            <div className="bg-black/50 backdrop-blur-sm text-white px-4 py-2 rounded-full flex items-center gap-2 text-sm shadow-lg">
+                                ⬇️ Nach unten scrollen
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
