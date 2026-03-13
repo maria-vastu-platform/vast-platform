@@ -177,7 +177,8 @@ export default function LektionView() {
         return acc;
     }, {});
 
-    const otherMaterials = lektion.materials.filter(m => m.type !== 'pdf' && m.type !== 'link' && m.type !== 'video');
+    const imageMaterials = lektion.materials.filter(m => m.type === 'image');
+    const otherMaterials = lektion.materials.filter(m => m.type !== 'pdf' && m.type !== 'link' && m.type !== 'video' && m.type !== 'image');
 
     const handleToggleComplete = (val: boolean) => {
         toggleComplete(val);
@@ -360,6 +361,22 @@ export default function LektionView() {
                     </button>
                 </div>
             </div>
+
+            {/* Inline Images */}
+            {imageMaterials.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 p-6 md:p-8 space-y-6">
+                    {imageMaterials.map((mat) => (
+                        <div key={mat.id} className="relative rounded-xl overflow-hidden shadow-sm border border-vastu-sand/20 bg-vastu-cream/30">
+                            <img
+                                src={mat.url}
+                                alt={mat.title}
+                                className="w-full h-auto object-contain"
+                            />
+                        </div>
+                    ))}
+                </div>
+            )}
+
 
             {/* PDF Materials */}
             {pdfMaterials.length > 0 && (

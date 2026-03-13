@@ -8,7 +8,7 @@ export interface User {
     avatar?: string;
 }
 
-export type MaterialType = 'video' | 'pdf' | 'pptx' | 'doc' | 'link' | 'zip';
+export type MaterialType = 'video' | 'pdf' | 'pptx' | 'doc' | 'link' | 'zip' | 'image';
 
 export interface Material {
     id: string;

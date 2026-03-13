@@ -44,7 +44,7 @@ export default function FileUploader({ onUploadComplete, folder = 'general', lab
             else if (['zip', 'rar', '7z'].includes(ext)) type = 'zip';
             else if (['pptx', 'ppt'].includes(ext)) type = 'pptx';
             else if (['doc', 'docx'].includes(ext)) type = 'doc';
-            else if (['jpg', 'png', 'jpeg', 'webp'].includes(ext)) type = 'doc';
+            else if (['jpg', 'png', 'jpeg', 'webp'].includes(ext)) type = 'image';
 
             onUploadComplete(publicUrl, type, file.name);
 

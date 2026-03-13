@@ -9,7 +9,7 @@ import 'react-quill/dist/quill.snow.css';
 interface Material {
     id: string;
     title: string;
-    type: 'video' | 'pdf' | 'doc' | 'link' | 'zip';
+    type: 'video' | 'pdf' | 'doc' | 'link' | 'zip' | 'image';
     url: string;
     week_id?: string;
     day_id?: string;
