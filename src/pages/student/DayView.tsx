@@ -4,6 +4,7 @@ import { Download, FileText, Video, File, ChevronRight, ChevronLeft, Loader2, Yo
 import { useModules, useLektion } from '../../hooks/useCourse';
 import { Module, Lektion, Material } from '../../lib/types';
 import { getVideoEmbedUrl, cn, navigateBackOr } from '../../lib/utils';
+import { sanitizeHtml } from '../../lib/sanitize';
 
 // Helper component for dual video player (reused logic)
 const VideoPlayer = ({ youtubeUrl, rutubeUrl, title }: { youtubeUrl?: string, rutubeUrl?: string, title: string }) => {
@@ -165,7 +166,7 @@ export default function DayView() {
                         <h1 className="text-3xl font-serif text-vastu-dark mb-4">{lektion.title}</h1>
                         <div
                             className="text-vastu-text-light leading-relaxed text-base font-light prose prose-stone max-w-none [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5 [&>p]:mb-4"
-                            dangerouslySetInnerHTML={{ __html: lektion.description || '' }}
+                            dangerouslySetInnerHTML={{ __html: sanitizeHtml(lektion.description || '') }}
                         />
                     </div>
                 </div>
@@ -316,7 +317,7 @@ export default function DayView() {
                             <div className="space-y-4">
                                 <div
                                     className="text-sm text-vastu-text-light prose prose-sm max-w-none [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5 [&>p]:mb-2"
-                                    dangerouslySetInnerHTML={{ __html: lektion.homeworkDescription }}
+                                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(lektion.homeworkDescription || '') }}
                                 />
 
                                 {lektion.materials.filter((m: Material) => m.isHomework).length > 0 && (

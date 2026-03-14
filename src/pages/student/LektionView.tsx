@@ -2,6 +2,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { FileText, Download, Loader2, BookOpen, CheckCircle2, ChevronRight, Home, ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
 import { useLektion, useModules } from '../../hooks/useCourse';
 import { navigateBackOr, parseCategorizedLink } from '../../lib/utils';
+import { sanitizeHtml } from '../../lib/sanitize';
 import { Material } from '../../lib/types';
 import VimeoPlayer from '../../components/VimeoPlayer';
 import { useState, useEffect } from 'react';
@@ -262,7 +263,7 @@ export default function LektionView() {
                         <div>
                             <div
                                 className={`text-vastu-text font-body leading-relaxed max-w-2xl text-base prose prose-sm ${!descExpanded ? 'line-clamp-4' : ''}`}
-                                dangerouslySetInnerHTML={{ __html: lektion.description }}
+                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(lektion.description || '') }}
                             />
                             <button
                                 onClick={() => setDescExpanded(!descExpanded)}
@@ -327,7 +328,7 @@ export default function LektionView() {
                                         <BookOpen size={18} className="text-vastu-gold" />
                                         Hausaufgabe
                                     </h3>
-                                    <div className="text-vastu-text font-body prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: lektion.homeworkDescription }} />
+                                    <div className="text-vastu-text font-body prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(lektion.homeworkDescription || '') }} />
                                 </div>
                             </div>
                         );

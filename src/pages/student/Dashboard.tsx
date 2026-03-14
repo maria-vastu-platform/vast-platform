@@ -3,6 +3,7 @@ import { Play, ChevronRight, FileText, Loader2, CheckCircle2, Download, Lock, Gi
 import { useEffect, useState } from 'react';
 import { useModules } from '../../hooks/useCourse';
 import { navigateBackOr, parseCategorizedLink } from '../../lib/utils';
+import { sanitizeHtml } from '../../lib/sanitize';
 import { supabase } from '../../lib/supabase';
 import { Material } from '../../lib/types';
 
@@ -299,7 +300,7 @@ export default function StudentDashboard() {
                                                             {lektion.title}
                                                         </h4>
                                                         {lektion.description && (
-                                                            <p className="text-xs font-body text-vastu-text-light line-clamp-2 mt-0.5" dangerouslySetInnerHTML={{ __html: lektion.description }} />
+                                                            <p className="text-xs font-body text-vastu-text-light line-clamp-2 mt-0.5" dangerouslySetInnerHTML={{ __html: sanitizeHtml(lektion.description || '') }} />
                                                         )}
                                                     </div>
                                                 </div>
