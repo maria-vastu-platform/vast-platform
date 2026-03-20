@@ -69,7 +69,7 @@ const LektionEditor = ({ lektion, moduleId, onDelete, onUpdate, onMoveUp, onMove
     const handleSave = async () => {
         setSaving(true);
         try {
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('days')
                 .update({
                     title: local.title,
@@ -79,14 +79,18 @@ const LektionEditor = ({ lektion, moduleId, onDelete, onUpdate, onMoveUp, onMove
                     vimeo_url: local.vimeo_url,
                     date: local.date
                 })
-                .eq('id', lektion.id);
+                .eq('id', lektion.id)
+                .select();
 
             if (error) throw error;
+            if (!data || data.length === 0) {
+                throw new Error('Keine Berechtigung zum Speichern. Bitte prüfe deine Rolle (Teacher).');
+            }
             setIsDirty(false);
             onUpdate();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error saving lektion:', error);
-            alert('Fehler beim Speichern der Lektion');
+            alert('Fehler beim Speichern: ' + (error?.message || 'Unbekannter Fehler'));
         } finally {
             setSaving(false);
         }
@@ -332,21 +336,25 @@ const ModulEditor = ({ modul, onDelete, onUpdate, onAddLektion, onMoveUp, onMove
     const handleSave = async () => {
         setSaving(true);
         try {
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('weeks')
                 .update({
                     title: localModul.title,
                     description: localModul.description,
                     available_from: localModul.available_from
                 })
-                .eq('id', modul.id);
+                .eq('id', modul.id)
+                .select();
 
             if (error) throw error;
+            if (!data || data.length === 0) {
+                throw new Error('Keine Berechtigung zum Speichern. Bitte prüfe deine Rolle (Teacher).');
+            }
             setIsDirty(false);
             onUpdate();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error saving modul:', error);
-            alert('Fehler beim Speichern des Moduls');
+            alert('Fehler beim Speichern: ' + (error?.message || 'Unbekannter Fehler'));
         } finally {
             setSaving(false);
         }
@@ -497,21 +505,29 @@ const ModulEditor = ({ modul, onDelete, onUpdate, onAddLektion, onMoveUp, onMove
                                         isLast={index === modul.days.length - 1}
                                         onMoveUp={async () => {
                                             if (index > 0) {
-                                                const days = modul.days.sort((a, b) => a.order_index - b.order_index);
+                                                const days = [...modul.days].sort((a, b) => a.order_index - b.order_index);
                                                 const prev = days[index - 1];
                                                 const curr = days[index];
-                                                await supabase.from('days').update({ order_index: prev.order_index }).eq('id', curr.id);
-                                                await supabase.from('days').update({ order_index: curr.order_index }).eq('id', prev.id);
+                                                // Use distinct indices to avoid swapping identical values
+                                                const prevIdx = Math.min(index - 1, prev.order_index);
+                                                const currIdx = Math.max(index, curr.order_index);
+                                                const newPrevIdx = prevIdx === currIdx ? currIdx + 1 : currIdx;
+                                                await supabase.from('days').update({ order_index: prevIdx }).eq('id', curr.id).select();
+                                                await supabase.from('days').update({ order_index: newPrevIdx }).eq('id', prev.id).select();
                                                 onUpdate();
                                             }
                                         }}
                                         onMoveDown={async () => {
                                             if (index < modul.days.length - 1) {
-                                                const days = modul.days.sort((a, b) => a.order_index - b.order_index);
+                                                const days = [...modul.days].sort((a, b) => a.order_index - b.order_index);
                                                 const next = days[index + 1];
                                                 const curr = days[index];
-                                                await supabase.from('days').update({ order_index: next.order_index }).eq('id', curr.id);
-                                                await supabase.from('days').update({ order_index: curr.order_index }).eq('id', next.id);
+                                                // Use distinct indices to avoid swapping identical values
+                                                const currIdx = Math.min(index, curr.order_index);
+                                                const nextIdx = Math.max(index + 1, next.order_index);
+                                                const newCurrIdx = currIdx === nextIdx ? nextIdx + 1 : nextIdx;
+                                                await supabase.from('days').update({ order_index: newCurrIdx }).eq('id', curr.id).select();
+                                                await supabase.from('days').update({ order_index: currIdx }).eq('id', next.id).select();
                                                 onUpdate();
                                             }
                                         }}
@@ -657,8 +673,11 @@ export default function CourseEditor() {
                             if (index > 0) {
                                 const prev = modules[index - 1];
                                 const curr = modules[index];
-                                await supabase.from('weeks').update({ order_index: prev.order_index }).eq('id', curr.id);
-                                await supabase.from('weeks').update({ order_index: curr.order_index }).eq('id', prev.id);
+                                const prevIdx = Math.min(index - 1, prev.order_index);
+                                const currIdx = Math.max(index, curr.order_index);
+                                const newPrevIdx = prevIdx === currIdx ? currIdx + 1 : currIdx;
+                                await supabase.from('weeks').update({ order_index: prevIdx }).eq('id', curr.id).select();
+                                await supabase.from('weeks').update({ order_index: newPrevIdx }).eq('id', prev.id).select();
                                 fetchModules();
                             }
                         }}
@@ -666,8 +685,11 @@ export default function CourseEditor() {
                             if (index < modules.length - 1) {
                                 const next = modules[index + 1];
                                 const curr = modules[index];
-                                await supabase.from('weeks').update({ order_index: next.order_index }).eq('id', curr.id);
-                                await supabase.from('weeks').update({ order_index: curr.order_index }).eq('id', next.id);
+                                const currIdx = Math.min(index, curr.order_index);
+                                const nextIdx = Math.max(index + 1, next.order_index);
+                                const newCurrIdx = currIdx === nextIdx ? nextIdx + 1 : nextIdx;
+                                await supabase.from('weeks').update({ order_index: newCurrIdx }).eq('id', curr.id).select();
+                                await supabase.from('weeks').update({ order_index: currIdx }).eq('id', next.id).select();
                                 fetchModules();
                             }
                         }}
