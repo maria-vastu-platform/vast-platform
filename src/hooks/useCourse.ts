@@ -70,6 +70,7 @@ export function useModules() {
                                 date: d.date,
                                 isCompleted: completedIds.has(d.id),
                                 homeworkDescription: d.homework_description,
+                                homeworkChecklist: d.homework_checklist,
                                 materials: [],
                             })),
                         moduleMaterials: w.materials
@@ -146,6 +147,7 @@ export function useLektion(moduleId: string | undefined, lektionId: string | und
                     date: dayData.date,
                     isCompleted: !!progressData,
                     homeworkDescription: dayData.homework_description,
+                    homeworkChecklist: dayData.homework_checklist,
                     materials: (matData || []).map((m: any) => ({
                         id: m.id,
                         title: m.title,

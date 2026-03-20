@@ -22,6 +22,7 @@ interface Lektion {
     order_index: number;
     description?: string;
     homework_description?: string;
+    homework_checklist?: string;
     vimeo_url?: string;
     date?: string;
     is_visible?: boolean;
@@ -74,6 +75,7 @@ const LektionEditor = ({ lektion, moduleId, onDelete, onUpdate, onMoveUp, onMove
                     title: local.title,
                     description: local.description,
                     homework_description: local.homework_description,
+                    homework_checklist: local.homework_checklist,
                     vimeo_url: local.vimeo_url,
                     date: local.date
                 })
@@ -212,6 +214,17 @@ const LektionEditor = ({ lektion, moduleId, onDelete, onUpdate, onMoveUp, onMove
                                 placeholder="Beschreibe die Hausaufgabe..."
                                 className="bg-white rounded-lg"
                             />
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Checkliste (ein Punkt pro Zeile)</label>
+                                <textarea
+                                    value={local.homework_checklist || ''}
+                                    onChange={(e) => handleChange('homework_checklist', e.target.value)}
+                                    rows={4}
+                                    className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-vastu-accent bg-white"
+                                    placeholder={"Vastu-Karte besorgen oder selbst zeichnen\nRäume einordnen\nErfahrungen in der Gruppe teilen"}
+                                />
+                                <p className="text-xs text-gray-400 mt-1">Diese Punkte erscheinen als Checkliste für die Studenten. Wenn leer, wird die Beschreibung automatisch in Punkte aufgeteilt.</p>
+                            </div>
                             <div>
                                 <div className="space-y-2 mb-3">
                                     {homeworkMaterials.map(m => (
@@ -580,6 +593,7 @@ export default function CourseEditor() {
                         date: d.date,
                         order_index: d.order_index,
                         homework_description: d.homework_description,
+                        homework_checklist: d.homework_checklist,
                         is_visible: d.is_visible,
                         materials: d.materials || []
                     })),

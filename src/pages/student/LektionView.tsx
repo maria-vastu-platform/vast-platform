@@ -277,7 +277,15 @@ export default function LektionView() {
 
                 {/* Homework Checklist — interactive checkboxes */}
                 {lektion.homeworkDescription && (() => {
-                    const hwItems = parseHomeworkItems(lektion.homeworkDescription);
+                    // Use explicit checklist if provided, otherwise fall back to auto-parsing
+                    const explicitItems = lektion.homeworkChecklist
+                        ? lektion.homeworkChecklist.split('\n').map(l => l.trim()).filter(l => l.length > 0)
+                        : [];
+                    const hwItems = explicitItems.length > 0
+                        ? explicitItems
+                        : parseHomeworkItems(lektion.homeworkDescription);
+
+                    const hasExplicitChecklist = explicitItems.length > 0;
 
                     if (hwItems.length > 0) {
                         const items = hwItems.map((text, i) => ({
@@ -296,6 +304,10 @@ export default function LektionView() {
                                         Hausaufgabe
                                         {allDone && <span className="text-xs font-sans bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Alles erledigt ✓</span>}
                                     </h3>
+                                    {/* Show full description text when explicit checklist is used */}
+                                    {hasExplicitChecklist && (
+                                        <div className="text-vastu-text font-body prose prose-sm max-w-none mb-5" dangerouslySetInnerHTML={{ __html: sanitizeHtml(lektion.homeworkDescription || '') }} />
+                                    )}
                                     <div className="space-y-3">
                                         {items.map((item) => (
                                             <label

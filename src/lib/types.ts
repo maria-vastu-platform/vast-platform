@@ -28,6 +28,7 @@ export interface Lektion {
     date?: string;
     isCompleted?: boolean;
     homeworkDescription?: string;
+    homeworkChecklist?: string;
 }
 
 export interface Module {
