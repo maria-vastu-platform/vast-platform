@@ -4,6 +4,7 @@ import StudentLayout from './components/layout/StudentLayout';
 import StudentDashboard from './pages/student/Dashboard';
 import WelcomePage from './pages/student/WelcomePage';
 import LektionView from './pages/student/LektionView';
+import QuizView from './pages/student/QuizView';
 import Library from './pages/student/Library';
 import Profile from './pages/student/Profile';
 import InstallGuide from './pages/student/InstallGuide';
@@ -63,6 +64,7 @@ function App() {
                     <Route path="/student" element={<StudentLayout />}>
                         <Route index element={<StudentDashboard />} />
                         <Route path="module/:moduleId/lektion/:lektionId" element={<LektionView />} />
+                        <Route path="module/:moduleId/quiz" element={<QuizView />} />
                         <Route path="library" element={<Library />} />
                         <Route path="profile" element={<Profile />} />
                         <Route path="install" element={<InstallGuide />} />

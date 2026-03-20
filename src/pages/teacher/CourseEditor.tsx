@@ -5,6 +5,7 @@ import FileUploader from '../../components/FileUploader';
 import AddLinkModal from '../../components/AddLinkModal';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import QuizEditor from '../../components/QuizEditor';
 
 interface Material {
     id: string;
@@ -473,6 +474,9 @@ const ModulEditor = ({ modul, onDelete, onUpdate, onAddLektion, onMoveUp, onMove
                         onAdd={(url, formattedTitle) => handleAddMaterial(url, 'link', formattedTitle)}
                         title="Link zum Modul hinzufügen"
                     />
+
+                    {/* Quiz */}
+                    <QuizEditor moduleId={modul.id} />
 
                     {/* Lektionen */}
                     <div className="mt-8">

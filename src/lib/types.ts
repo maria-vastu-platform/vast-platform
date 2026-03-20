@@ -109,3 +109,30 @@ export interface Kohorte {
     color?: string;
     created_at?: string;
 }
+
+export interface QuizQuestion {
+    id: string;
+    quiz_id: string;
+    question: string;
+    options: string[];
+    correct_index: number;
+    order_index: number;
+}
+
+export interface Quiz {
+    id: string;
+    week_id: string;
+    title: string;
+    description?: string;
+    questions: QuizQuestion[];
+}
+
+export interface QuizAttempt {
+    id: string;
+    user_id: string;
+    quiz_id: string;
+    answers: Record<string, number>;
+    score: number;
+    total: number;
+    completed_at: string;
+}

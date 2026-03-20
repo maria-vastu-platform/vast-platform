@@ -1,7 +1,8 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Play, ChevronRight, FileText, Loader2, CheckCircle2, Download, Lock, Gift, Video, ArrowLeft, ExternalLink } from 'lucide-react';
+import { Play, ChevronRight, FileText, Loader2, CheckCircle2, Download, Lock, Gift, Video, ArrowLeft, ExternalLink, ClipboardList } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useModules } from '../../hooks/useCourse';
+import { useQuiz } from '../../hooks/useQuiz';
 import { navigateBackOr, parseCategorizedLink } from '../../lib/utils';
 import { sanitizeHtml } from '../../lib/sanitize';
 import { supabase } from '../../lib/supabase';
@@ -49,6 +50,7 @@ export default function StudentDashboard() {
     }
 
     const activeMod = modules.find(m => m.id === activeModuleId);
+    const { quiz, lastAttempt: quizAttempt } = useQuiz(activeModuleId || undefined);
     if (!activeMod) return null;
 
     const completedCount = activeMod.lektionen.filter(l => l.isCompleted).length;
@@ -308,6 +310,41 @@ export default function StudentDashboard() {
                                             </Link>
                                         ))}
                                     </div>
+                                )}
+
+                                {/* Quiz Button */}
+                                {quiz && quiz.questions.length > 0 && (
+                                    <Link
+                                        to={`/student/module/${activeMod.id}/quiz`}
+                                        className={`flex items-center justify-between p-4 rounded-xl border transition-all group relative overflow-hidden ${
+                                            quizAttempt
+                                                ? 'border-purple-200 bg-purple-50/30 hover:bg-purple-50/60'
+                                                : 'border-vastu-sand/50 hover:border-purple-300 hover:bg-purple-50/30'
+                                        }`}
+                                    >
+                                        <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-xl transition-colors ${
+                                            quizAttempt ? 'bg-purple-400' : 'bg-purple-200 group-hover:bg-purple-400'
+                                        }`} />
+                                        <div className="flex items-center gap-4 pl-2">
+                                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all ${
+                                                quizAttempt
+                                                    ? 'bg-purple-100 text-purple-600'
+                                                    : 'bg-purple-50 text-purple-500 group-hover:bg-purple-500 group-hover:text-white'
+                                            }`}>
+                                                <ClipboardList size={18} />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-serif font-medium text-vastu-dark">{quiz.title}</h4>
+                                                <p className="text-xs font-body text-vastu-text-light">
+                                                    {quizAttempt
+                                                        ? `${quizAttempt.score}/${quizAttempt.total} richtig`
+                                                        : `${quiz.questions.length} Fragen`
+                                                    }
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <ChevronRight size={18} className="text-vastu-sand group-hover:text-purple-500 transition-colors shrink-0" />
+                                    </Link>
                                 )}
                             </div>
 
