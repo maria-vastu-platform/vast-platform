@@ -8,7 +8,16 @@ export function useQuiz(moduleId: string | undefined) {
     const [lastAttempt, setLastAttempt] = useState<QuizAttempt | null>(null);
 
     useEffect(() => {
-        if (!moduleId) return;
+        // Reset state when module changes
+        setQuiz(null);
+        setLastAttempt(null);
+
+        if (!moduleId) {
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
 
         async function fetchQuiz() {
             try {
