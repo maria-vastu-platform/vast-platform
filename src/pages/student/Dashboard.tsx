@@ -33,6 +33,7 @@ export default function StudentDashboard() {
 
     const searchParams = new URLSearchParams(location.search);
     const activeModuleId = searchParams.get('module');
+    const { quiz, lastAttempt: quizAttempt } = useQuiz(activeModuleId || undefined);
 
     useEffect(() => {
         if (!loading && modules.length > 0) {
@@ -50,7 +51,6 @@ export default function StudentDashboard() {
     }
 
     const activeMod = modules.find(m => m.id === activeModuleId);
-    const { quiz, lastAttempt: quizAttempt } = useQuiz(activeModuleId || undefined);
     if (!activeMod) return null;
 
     const completedCount = activeMod.lektionen.filter(l => l.isCompleted).length;
