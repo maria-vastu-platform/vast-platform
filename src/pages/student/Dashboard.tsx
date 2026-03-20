@@ -51,7 +51,10 @@ export default function StudentDashboard() {
     }
 
     const activeMod = modules.find(m => m.id === activeModuleId);
-    if (!activeMod) return null;
+    if (!activeMod) {
+        // Module not yet selected or invalid — useEffect will redirect shortly
+        return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-vastu-gold" size={40} /></div>;
+    }
 
     const completedCount = activeMod.lektionen.filter(l => l.isCompleted).length;
     const totalCount = activeMod.lektionen.length;
