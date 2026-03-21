@@ -15,6 +15,7 @@ import Students from './pages/teacher/Students';
 import ManageLibrary from './pages/teacher/ManageLibrary';
 import ManageKohorten from './pages/teacher/ManageKohorten';
 import SettingsPage from './pages/teacher/SettingsPage';
+import QuizResults from './pages/teacher/QuizResults';
 
 import { AuthProvider } from './contexts/AuthContext';
 import RegisterPage from './pages/RegisterPage';
@@ -77,6 +78,7 @@ function App() {
                         <Route path="students" element={<Students />} />
                         <Route path="library" element={<ManageLibrary />} />
                         <Route path="kohorten" element={<ManageKohorten />} />
+                        <Route path="quiz-results" element={<QuizResults />} />
                         <Route path="settings" element={<SettingsPage />} />
                     </Route>
 
