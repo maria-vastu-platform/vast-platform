@@ -226,7 +226,7 @@ export default function QuizResults() {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-50">
-                                                {quizAttempts.map((attempt, idx) => {
+                                                {quizAttempts.map((attempt) => {
                                                     const userAttempts = byUser[attempt.user_id] || [];
                                                     const attemptNum = userAttempts.length - userAttempts.indexOf(attempt);
                                                     const pct = Math.round((attempt.score / attempt.total) * 100);
