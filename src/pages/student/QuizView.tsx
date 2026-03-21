@@ -154,6 +154,8 @@ export default function QuizView() {
                                 </h3>
                                 <div className="space-y-2 pl-6">
                                     {q.options.map((option, oIdx) => {
+                                        // Skip empty options (teacher left placeholder blank)
+                                        if (!option || option.trim() === '') return null;
                                         const isSelected = selectedIdx === oIdx;
                                         const isCorrect = q.correct_index === oIdx;
 
