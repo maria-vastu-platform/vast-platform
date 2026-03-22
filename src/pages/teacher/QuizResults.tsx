@@ -184,16 +184,16 @@ export default function QuizResults() {
                         <div key={quiz.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                             <button
                                 onClick={() => setExpandedQuiz(isExpanded ? null : quiz.id)}
-                                className="w-full flex items-center justify-between p-5 hover:bg-gray-50/50 transition-colors"
+                                className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between p-5 hover:bg-gray-50/50 transition-colors gap-3"
                             >
                                 <div className="flex items-center gap-3">
-                                    {isExpanded ? <ChevronDown size={20} className="text-purple-500" /> : <ChevronRight size={20} className="text-gray-400" />}
+                                    {isExpanded ? <ChevronDown size={20} className="text-purple-500 shrink-0" /> : <ChevronRight size={20} className="text-gray-400 shrink-0" />}
                                     <div className="text-left">
                                         <h3 className="font-medium text-vastu-dark">{quiz.week_title} — {quiz.title}</h3>
                                         <p className="text-sm text-gray-500">{quiz.questions.length} Fragen</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-6 text-sm">
+                                <div className="flex items-center gap-6 text-sm pl-8 sm:pl-0">
                                     <div className="text-center">
                                         <div className="font-bold text-vastu-dark">{uniqueUsers}</div>
                                         <div className="text-gray-400 text-xs">Teilnehmer</div>
@@ -214,11 +214,11 @@ export default function QuizResults() {
                             </button>
 
                             {isExpanded && (
-                                <div className="border-t border-gray-100 p-5">
+                                <div className="border-t border-gray-100 p-5 overflow-x-auto">
                                     {quizAttempts.length === 0 ? (
                                         <p className="text-center text-gray-400 py-6">Noch keine Versuche.</p>
                                     ) : (
-                                        <table className="w-full">
+                                        <table className="w-full min-w-[500px]">
                                             <thead>
                                                 <tr className="text-left text-xs text-gray-500 uppercase tracking-wider border-b border-gray-100">
                                                     <th className="pb-3 pr-4">Teilnehmer</th>
