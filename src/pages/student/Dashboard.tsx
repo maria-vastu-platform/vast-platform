@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Play, ChevronRight, FileText, Loader2, CheckCircle2, Download, Lock, Gift, Video, ArrowLeft, ExternalLink, ClipboardList } from 'lucide-react';
+import { Play, ChevronRight, FileText, Loader2, CheckCircle2, Download, Lock, Gift, Video, ArrowLeft, ArrowRight, ExternalLink, ClipboardList } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useModules } from '../../hooks/useCourse';
 import { useQuiz } from '../../hooks/useQuiz';
@@ -56,6 +56,12 @@ export default function StudentDashboard() {
         return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-vastu-gold" size={40} /></div>;
     }
 
+    // Find next unlocked module for "Weiter" navigation
+    const activeIndex = modules.findIndex(m => m.id === activeModuleId);
+    const nextModule = activeIndex >= 0 && activeIndex < modules.length - 1
+        ? modules.slice(activeIndex + 1).find(m => !m.isLocked)
+        : null;
+
     const completedCount = activeMod.lektionen.filter(l => l.isCompleted).length;
     const totalCount = activeMod.lektionen.length;
     const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
@@ -101,14 +107,25 @@ export default function StudentDashboard() {
 
     return (
         <div className="animate-fade-in space-y-4">
-            {/* Back Navigation */}
-            <button
-                onClick={() => navigateBackOr(navigate, '/student/welcome')}
-                className="inline-flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors group text-sm font-sans"
-            >
-                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-                <span>Zurück</span>
-            </button>
+            {/* Navigation Bar */}
+            <div className="flex items-center justify-between">
+                <button
+                    onClick={() => navigateBackOr(navigate, '/student/welcome')}
+                    className="inline-flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors group text-sm font-sans"
+                >
+                    <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                    <span>Zurück</span>
+                </button>
+                {nextModule && (
+                    <Link
+                        to={`/student?module=${nextModule.id}`}
+                        className="inline-flex items-center gap-2 text-vastu-gold hover:text-vastu-dark transition-colors group text-sm font-sans font-medium"
+                    >
+                        <span>Weiter: {nextModule.title}</span>
+                        <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                )}
+            </div>
             <div className="bg-white rounded-xl md:rounded-2xl shadow-sm border border-vastu-sand/50 overflow-hidden min-h-[calc(100vh-5rem)]">
                 {/* Module Header — grain texture + decorative module number */}
                 <div className="bg-vastu-accent grain-overlay p-6 md:p-8 relative overflow-hidden">
