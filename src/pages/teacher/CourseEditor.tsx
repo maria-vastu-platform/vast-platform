@@ -377,12 +377,12 @@ const ModulEditor = ({ modul, onDelete, onUpdate, onAddLektion, onMoveUp, onMove
     return (
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
             {/* Module Header */}
-            <div className="p-4 bg-gray-50 flex items-start justify-between">
-                <div className="flex items-start gap-3 flex-1">
-                    <button onClick={() => setExpanded(!expanded)} className="p-1 -ml-1 mt-1">
+            <div className="p-4 bg-gray-50 space-y-3">
+                <div className="flex items-start gap-3">
+                    <button onClick={() => setExpanded(!expanded)} className="p-1 -ml-1 mt-1 shrink-0">
                         {expanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
                     </button>
-                    <div className="flex flex-col flex-1 mr-4">
+                    <div className="flex flex-col flex-1 min-w-0">
                         <input
                             value={localModul.title}
                             onChange={(e) => handleChange('title', e.target.value)}
@@ -398,36 +398,38 @@ const ModulEditor = ({ modul, onDelete, onUpdate, onAddLektion, onMoveUp, onMove
                             placeholder="Beschreibung (z.B. Vastu Karte, Elemente...)"
                         />
                     </div>
+                </div>
+                <div className="flex items-center justify-between gap-2 pl-8">
                     <button
                         onClick={(e) => { e.stopPropagation(); onAddLektion(); }}
-                        className="flex items-center text-sm text-vastu-dark hover:text-vastu-dark/70 whitespace-nowrap mt-2 mr-4"
+                        className="flex items-center text-sm text-vastu-dark hover:text-vastu-dark/70 whitespace-nowrap"
                     >
                         <Plus className="w-4 h-4 mr-1" />
                         Lektion
                     </button>
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                    <button onClick={onMoveUp} disabled={isFirst} className="p-2 text-gray-400 hover:text-vastu-dark disabled:opacity-30">↑</button>
-                    <button onClick={onMoveDown} disabled={isLast} className="p-2 text-gray-400 hover:text-vastu-dark disabled:opacity-30">↓</button>
-                    <input
-                        type="date"
-                        className="text-sm border rounded px-2 py-1 bg-white"
-                        value={localModul.available_from ? new Date(localModul.available_from).toISOString().split('T')[0] : ''}
-                        onChange={(e) => {
-                            const date = e.target.value ? new Date(e.target.value).toISOString() : null;
-                            handleChange('available_from', date);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                    <button
-                        onClick={handleSave}
-                        disabled={!isDirty || saving}
-                        className={`p-2 rounded-lg transition-colors flex items-center justify-center ${isDirty ? 'bg-vastu-accent text-white hover:bg-vastu-accent/90' : 'bg-gray-100 text-gray-400'}`}
-                        title="Änderungen speichern"
-                    >
-                        {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                    </button>
-                    <button onClick={onDelete} className="p-2 text-red-400 hover:text-red-600"><Trash2 size={16} /></button>
+                    <div className="flex items-center gap-1 flex-wrap justify-end">
+                        <button onClick={onMoveUp} disabled={isFirst} className="p-1.5 text-gray-400 hover:text-vastu-dark disabled:opacity-30">↑</button>
+                        <button onClick={onMoveDown} disabled={isLast} className="p-1.5 text-gray-400 hover:text-vastu-dark disabled:opacity-30">↓</button>
+                        <input
+                            type="date"
+                            className="text-sm border rounded px-2 py-1 bg-white max-w-[140px]"
+                            value={localModul.available_from ? new Date(localModul.available_from).toISOString().split('T')[0] : ''}
+                            onChange={(e) => {
+                                const date = e.target.value ? new Date(e.target.value).toISOString() : null;
+                                handleChange('available_from', date);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                        <button
+                            onClick={handleSave}
+                            disabled={!isDirty || saving}
+                            className={`p-1.5 rounded-lg transition-colors flex items-center justify-center ${isDirty ? 'bg-vastu-accent text-white hover:bg-vastu-accent/90' : 'bg-gray-100 text-gray-400'}`}
+                            title="Änderungen speichern"
+                        >
+                            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                        </button>
+                        <button onClick={onDelete} className="p-1.5 text-red-400 hover:text-red-600"><Trash2 size={16} /></button>
+                    </div>
                 </div>
             </div>
 
