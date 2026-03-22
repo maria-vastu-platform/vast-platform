@@ -119,11 +119,14 @@ export interface QuizQuestion {
     order_index: number;
 }
 
+export type QuizType = 'quiz' | 'reflection';
+
 export interface Quiz {
     id: string;
     week_id: string;
     title: string;
     description?: string;
+    quiz_type: QuizType;
     questions: QuizQuestion[];
 }
 

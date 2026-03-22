@@ -1,16 +1,15 @@
-import { ExternalLink, Play, Calendar, Video, MessageCircle, Star, ArrowRight, BookOpen, Library, Smartphone, LogOut, Map, ArrowLeft, Loader2 } from 'lucide-react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { ExternalLink, Play, Calendar, Video, MessageCircle, Star, ArrowRight, BookOpen, Library, Smartphone, LogOut, Map, Loader2 } from 'lucide-react';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useModules } from '../../hooks/useCourse';
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { getVideoEmbedUrl, navigateBackOr } from '../../lib/utils';
+import { getVideoEmbedUrl } from '../../lib/utils';
 import VimeoPlayer from '../../components/VimeoPlayer';
 
 export default function WelcomePage() {
     const { user, signOut, loading, role } = useAuth();
-    const navigate = useNavigate();
     const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Teilnehmer';
     const { modules } = useModules();
     const { isDemo } = useAuth();
@@ -76,13 +75,13 @@ export default function WelcomePage() {
                         </div>
                     </Link>
                     <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => navigateBackOr(navigate, '/student')}
-                            className="hidden sm:flex items-center gap-2 text-vastu-text-light hover:text-vastu-dark transition-colors mr-4 group text-sm font-sans"
+                        <Link
+                            to="/student"
+                            className="flex items-center gap-2 text-vastu-dark hover:text-vastu-gold transition-colors group text-sm font-sans font-medium"
                         >
-                            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-                            <span>Zurück</span>
-                        </button>
+                            <span>Weiter</span>
+                            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                        </Link>
                         <span className="text-sm font-sans text-vastu-text-light hidden sm:block">{displayName}</span>
                         <button onClick={() => signOut()} className="text-vastu-text-light hover:text-vastu-dark transition-colors">
                             <LogOut size={18} />

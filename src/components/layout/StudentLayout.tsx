@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useModules } from '../../hooks/useCourse';
 import { supabase } from '../../lib/supabase';
 import DisclaimerModal from '../DisclaimerModal';
+import AnnouncementBanner from '../AnnouncementBanner';
 
 const NavItem = ({ to, icon: Icon, label, isActive, onClick }: { to: string; icon: any; label: string; isActive: boolean; onClick?: () => void }) => (
     <Link
@@ -287,6 +288,7 @@ export default function StudentLayout() {
             {/* Main Content */}
             <main className="flex-1 md:ml-72 min-h-screen pt-16 md:pt-0">
                 <div className="px-4 py-4 md:px-6 md:py-6">
+                    <AnnouncementBanner />
                     <Outlet />
                 </div>
             </main>

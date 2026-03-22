@@ -178,8 +178,8 @@ export default function Students() {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <table className="w-full">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+                <table className="w-full min-w-[640px]">
                     <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
                             <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Teilnehmer</th>

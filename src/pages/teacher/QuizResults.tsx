@@ -7,6 +7,7 @@ interface QuizData {
     title: string;
     week_id: string;
     week_title: string;
+    quiz_type: 'quiz' | 'reflection';
     questions: {
         id: string;
         question: string;
@@ -81,6 +82,7 @@ export default function QuizResults() {
                 title: q.title,
                 week_id: q.week_id,
                 week_title: weekMap[q.week_id] || 'Unbekannt',
+                quiz_type: q.quiz_type || 'quiz',
                 questions: questionsByQuiz[q.id] || [],
             }));
 
@@ -173,7 +175,8 @@ export default function QuizResults() {
                     });
 
                     const uniqueUsers = Object.keys(byUser).length;
-                    const avgScore = quizAttempts.length > 0
+                    const isReflection = quiz.quiz_type === 'reflection';
+                    const avgScore = quizAttempts.length > 0 && !isReflection
                         ? Math.round(quizAttempts.reduce((s, a) => s + (a.score / a.total) * 100, 0) / quizAttempts.length)
                         : 0;
 
@@ -199,7 +202,7 @@ export default function QuizResults() {
                                         <div className="font-bold text-vastu-dark">{quizAttempts.length}</div>
                                         <div className="text-gray-400 text-xs">Versuche</div>
                                     </div>
-                                    {quizAttempts.length > 0 && (
+                                    {quizAttempts.length > 0 && !isReflection && (
                                         <div className="text-center">
                                             <div className={`font-bold ${avgScore >= 70 ? 'text-green-600' : avgScore >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>
                                                 {avgScore}%
@@ -281,19 +284,22 @@ export default function QuizResults() {
                                                     {quiz.questions.map((q, qIdx) => {
                                                         const userAnswer = attempt.answers[q.id];
                                                         const isCorrect = userAnswer === q.correct_index;
+                                                        const isReflection = quiz.quiz_type === 'reflection';
                                                         return (
                                                             <div key={q.id} className="flex items-start gap-2">
-                                                                {isCorrect
-                                                                    ? <CheckCircle2 size={16} className="text-green-500 mt-0.5 shrink-0" />
-                                                                    : <XCircle size={16} className="text-red-500 mt-0.5 shrink-0" />
+                                                                {isReflection
+                                                                    ? <CheckCircle2 size={16} className="text-purple-500 mt-0.5 shrink-0" />
+                                                                    : isCorrect
+                                                                        ? <CheckCircle2 size={16} className="text-green-500 mt-0.5 shrink-0" />
+                                                                        : <XCircle size={16} className="text-red-500 mt-0.5 shrink-0" />
                                                                 }
                                                                 <div className="text-sm">
                                                                     <span className="font-medium text-gray-700">{qIdx + 1}. {q.question}</span>
                                                                     <div className="text-gray-500 mt-0.5">
-                                                                        Antwort: <span className={isCorrect ? 'text-green-600' : 'text-red-600'}>
+                                                                        Antwort: <span className={isReflection ? 'text-purple-600' : isCorrect ? 'text-green-600' : 'text-red-600'}>
                                                                             {userAnswer !== undefined ? q.options[userAnswer] : '—'}
                                                                         </span>
-                                                                        {!isCorrect && (
+                                                                        {!isReflection && !isCorrect && (
                                                                             <span className="text-green-600 ml-2">
                                                                                 (Richtig: {q.options[q.correct_index]})
                                                                             </span>

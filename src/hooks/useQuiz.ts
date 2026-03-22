@@ -44,6 +44,7 @@ export function useQuiz(moduleId: string | undefined) {
                     week_id: quizData.week_id,
                     title: quizData.title,
                     description: quizData.description,
+                    quiz_type: quizData.quiz_type || 'quiz',
                     questions: (questions || []).map((q: any) => ({
                         id: q.id,
                         quiz_id: q.quiz_id,
@@ -88,11 +89,12 @@ export function useQuiz(moduleId: string | undefined) {
         fetchQuiz();
     }, [moduleId]);
 
-    const submitAttempt = async (answers: Record<string, number>): Promise<QuizAttempt | null> => {
+    const submitAttempt = async (answers: Record<string, number>, questionsForScoring?: { id: string; correct_index: number }[]): Promise<QuizAttempt | null> => {
         if (!quiz) return null;
 
+        const scoreQuestions = questionsForScoring || quiz.questions;
         let score = 0;
-        for (const q of quiz.questions) {
+        for (const q of scoreQuestions) {
             if (answers[q.id] === q.correct_index) score++;
         }
 

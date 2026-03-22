@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Plus, Trash2, Save, Loader2, GripVertical } from 'lucide-react';
+import { QuizType } from '../lib/types';
 
 interface QuizQuestion {
     id?: string;
@@ -18,6 +19,7 @@ export default function QuizEditor({ moduleId }: QuizEditorProps) {
     const [quizId, setQuizId] = useState<string | null>(null);
     const [title, setTitle] = useState('Quiz');
     const [description, setDescription] = useState('');
+    const [quizType, setQuizType] = useState<QuizType>('quiz');
     const [questions, setQuestions] = useState<QuizQuestion[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -39,6 +41,7 @@ export default function QuizEditor({ moduleId }: QuizEditorProps) {
                 setQuizId(quiz.id);
                 setTitle(quiz.title);
                 setDescription(quiz.description || '');
+                setQuizType(quiz.quiz_type || 'quiz');
 
                 const { data: qs } = await supabase
                     .from('quiz_questions')
@@ -70,7 +73,7 @@ export default function QuizEditor({ moduleId }: QuizEditorProps) {
             if (!currentQuizId) {
                 const { data, error } = await supabase
                     .from('quizzes')
-                    .insert({ week_id: moduleId, title, description: description || null })
+                    .insert({ week_id: moduleId, title, description: description || null, quiz_type: quizType })
                     .select()
                     .single();
                 if (error) throw error;
@@ -79,7 +82,7 @@ export default function QuizEditor({ moduleId }: QuizEditorProps) {
             } else {
                 const { error } = await supabase
                     .from('quizzes')
-                    .update({ title, description: description || null })
+                    .update({ title, description: description || null, quiz_type: quizType })
                     .eq('id', currentQuizId)
                     .select();
                 if (error) throw error;
@@ -198,6 +201,22 @@ export default function QuizEditor({ moduleId }: QuizEditorProps) {
                 </div>
             </div>
 
+            {/* Quiz Type Toggle */}
+            <div className="flex gap-2 mb-4">
+                <button
+                    onClick={() => { setQuizType('quiz'); setIsDirty(true); }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${quizType === 'quiz' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                >
+                    Quiz (mit richtigen Antworten)
+                </button>
+                <button
+                    onClick={() => { setQuizType('reflection'); setIsDirty(true); }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${quizType === 'reflection' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                >
+                    Reflexion (ohne richtig/falsch)
+                </button>
+            </div>
+
             {/* Quiz Title & Description */}
             <div className="space-y-2 mb-4">
                 <input
@@ -205,7 +224,7 @@ export default function QuizEditor({ moduleId }: QuizEditorProps) {
                     value={title}
                     onChange={(e) => { setTitle(e.target.value); setIsDirty(true); }}
                     className="w-full text-sm font-medium bg-white border border-gray-200 rounded px-3 py-2 focus:outline-none focus:border-purple-400"
-                    placeholder="Quiz-Titel"
+                    placeholder={quizType === 'reflection' ? 'Reflexion-Titel' : 'Quiz-Titel'}
                 />
                 <input
                     type="text"
@@ -238,13 +257,17 @@ export default function QuizEditor({ moduleId }: QuizEditorProps) {
                         <div className="space-y-2 pl-8">
                             {q.options.map((opt, oIdx) => (
                                 <div key={oIdx} className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => updateQuestion(qIdx, 'correct_index', oIdx)}
-                                        className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center transition-colors ${q.correct_index === oIdx ? 'border-green-500 bg-green-500' : 'border-gray-300 hover:border-green-400'}`}
-                                        title="Als richtige Antwort markieren"
-                                    >
-                                        {q.correct_index === oIdx && <div className="w-2 h-2 rounded-full bg-white" />}
-                                    </button>
+                                    {quizType === 'quiz' ? (
+                                        <button
+                                            onClick={() => updateQuestion(qIdx, 'correct_index', oIdx)}
+                                            className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center transition-colors ${q.correct_index === oIdx ? 'border-green-500 bg-green-500' : 'border-gray-300 hover:border-green-400'}`}
+                                            title="Als richtige Antwort markieren"
+                                        >
+                                            {q.correct_index === oIdx && <div className="w-2 h-2 rounded-full bg-white" />}
+                                        </button>
+                                    ) : (
+                                        <div className="w-5 h-5 rounded-full border-2 border-purple-300 shrink-0" />
+                                    )}
                                     <input
                                         type="text"
                                         value={opt}

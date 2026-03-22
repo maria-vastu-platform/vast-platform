@@ -1,8 +1,24 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import { ArrowLeft, Home, ChevronRight, Loader2, CheckCircle2, XCircle, Trophy, RotateCcw } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ArrowLeft, Home, ChevronRight, Loader2, CheckCircle2, XCircle, Trophy, RotateCcw, Heart } from 'lucide-react';
 import { useQuiz } from '../../hooks/useQuiz';
 import { navigateBackOr } from '../../lib/utils';
+import { QuizQuestion } from '../../lib/types';
+
+// Shuffle options for each question, returning new questions with remapped correct_index
+function shuffleQuestions(questions: QuizQuestion[]): QuizQuestion[] {
+    return questions.map(q => {
+        const validIndices = q.options.map((_, i) => i).filter(i => q.options[i]?.trim());
+        const shuffledIndices = [...validIndices];
+        for (let i = shuffledIndices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledIndices[i], shuffledIndices[j]] = [shuffledIndices[j], shuffledIndices[i]];
+        }
+        const newOptions = q.options.map((_, i) => i < shuffledIndices.length ? q.options[shuffledIndices[i]] : '');
+        const newCorrectIndex = shuffledIndices.indexOf(q.correct_index);
+        return { ...q, options: newOptions, correct_index: newCorrectIndex };
+    });
+}
 
 export default function QuizView() {
     const { moduleId } = useParams();
@@ -12,13 +28,28 @@ export default function QuizView() {
     const [submitting, setSubmitting] = useState(false);
     const [result, setResult] = useState<{ score: number; total: number } | null>(null);
     const [showReview, setShowReview] = useState(false);
+    const [isRetrying, setIsRetrying] = useState(false);
+    const [shuffleSeed, setShuffleSeed] = useState(0);
 
-    // If user already completed, show review by default
-    const viewingPastAttempt = !result && lastAttempt;
+    const isReflection = quiz?.quiz_type === 'reflection';
+
+    // Shuffle questions on mount and on each retry (only for quiz type, not reflection)
+    const shuffledQuestions = useMemo(() => {
+        if (!quiz) return [];
+        if (isReflection) return quiz.questions; // Don't shuffle reflection
+        return shuffleQuestions(quiz.questions);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [quiz, shuffleSeed]);
+
+    // If user already completed, show review by default (unless retrying)
+    const viewingPastAttempt = !result && lastAttempt && !isRetrying;
 
     if (loading) {
         return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-vastu-gold" size={40} /></div>;
     }
+
+    // Use original questions for review, shuffled for active quiz
+    const displayQuestions = (showReview && lastAttempt) ? quiz?.questions || [] : shuffledQuestions;
 
     if (!quiz || quiz.questions.length === 0) {
         return (
@@ -30,17 +61,17 @@ export default function QuizView() {
     }
 
     const handleSelect = (questionId: string, optionIndex: number) => {
-        if (result || showReview) return; // locked after submit
+        if (result || showReview) return;
         setAnswers(prev => ({ ...prev, [questionId]: optionIndex }));
     };
 
     const handleSubmit = async () => {
-        if (Object.keys(answers).length < quiz.questions.length) {
+        if (Object.keys(answers).length < shuffledQuestions.length) {
             alert('Bitte beantworte alle Fragen bevor du abgibst.');
             return;
         }
         setSubmitting(true);
-        const attempt = await submitAttempt(answers);
+        const attempt = await submitAttempt(answers, shuffledQuestions);
         if (attempt) {
             setResult({ score: attempt.score, total: attempt.total });
         }
@@ -51,6 +82,8 @@ export default function QuizView() {
         setAnswers({});
         setResult(null);
         setShowReview(false);
+        setIsRetrying(true);
+        setShuffleSeed(prev => prev + 1);
     };
 
     const activeAnswers = showReview && lastAttempt ? lastAttempt.answers : answers;
@@ -76,13 +109,13 @@ export default function QuizView() {
                 <ChevronRight size={14} className="text-vastu-sand" />
                 <Link to={`/student?module=${moduleId}`} className="hover:text-vastu-dark transition-colors">Modul</Link>
                 <ChevronRight size={14} className="text-vastu-sand" />
-                <span className="text-vastu-dark font-medium">Quiz</span>
+                <span className="text-vastu-dark font-medium">{isReflection ? 'Reflexion' : 'Quiz'}</span>
             </nav>
 
             {/* Quiz Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 overflow-hidden">
                 {/* Header */}
-                <div className="bg-vastu-accent grain-overlay p-6 md:p-10 relative overflow-hidden">
+                <div className={`${isReflection ? 'bg-purple-50' : 'bg-vastu-accent'} grain-overlay p-6 md:p-10 relative overflow-hidden`}>
                     <div className="absolute top-0 right-0 w-64 h-64 bg-vastu-dark opacity-5 rounded-full blur-[80px] translate-x-1/3 -translate-y-1/3" />
                     <div className="relative z-10">
                         <h1 className="text-2xl md:text-4xl font-serif mb-2 text-vastu-dark">{quiz.title}</h1>
@@ -91,8 +124,8 @@ export default function QuizView() {
                     </div>
                 </div>
 
-                {/* Score Banner */}
-                {scoreToShow && (
+                {/* Score Banner — only for quiz type */}
+                {!isReflection && scoreToShow && (
                     <div className={`mx-6 md:mx-8 mt-6 p-5 rounded-xl border-2 flex items-center gap-4 ${
                         scoreToShow.score === scoreToShow.total
                             ? 'bg-green-50 border-green-200'
@@ -119,10 +152,23 @@ export default function QuizView() {
                     </div>
                 )}
 
+                {/* Reflection submitted banner */}
+                {isReflection && result && (
+                    <div className="mx-6 md:mx-8 mt-6 p-5 rounded-xl border-2 bg-purple-50 border-purple-200 flex items-center gap-4">
+                        <Heart size={32} className="text-purple-500" />
+                        <div>
+                            <p className="font-serif text-lg text-vastu-dark">Danke für deine Reflexion!</p>
+                            <p className="text-sm font-body text-vastu-text-light">Deine Antworten wurden gespeichert.</p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Past attempt notice */}
                 {viewingPastAttempt && !showReview && (
                     <div className="mx-6 md:mx-8 mt-4 p-4 bg-vastu-cream rounded-xl border border-vastu-sand/30 flex items-center justify-between">
-                        <p className="text-sm font-body text-vastu-text">Du hast dieses Quiz bereits abgeschlossen.</p>
+                        <p className="text-sm font-body text-vastu-text">
+                            {isReflection ? 'Du hast diese Reflexion bereits ausgefüllt.' : 'Du hast dieses Quiz bereits abgeschlossen.'}
+                        </p>
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setShowReview(true)}
@@ -142,34 +188,46 @@ export default function QuizView() {
 
                 {/* Questions */}
                 <div className="p-6 md:p-8 space-y-8">
-                    {quiz.questions.map((q, qIdx) => {
+                    {displayQuestions.map((q, qIdx) => {
                         const selectedIdx = activeAnswers[q.id];
                         const hasAnswered = selectedIdx !== undefined;
 
                         return (
                             <div key={q.id} className="space-y-3">
                                 <h3 className="font-serif text-base text-vastu-dark flex gap-2">
-                                    <span className="text-vastu-gold font-bold">{qIdx + 1}.</span>
+                                    <span className={`font-bold ${isReflection ? 'text-purple-500' : 'text-vastu-gold'}`}>{qIdx + 1}.</span>
                                     {q.question}
                                 </h3>
                                 <div className="space-y-2 pl-6">
                                     {q.options.map((option, oIdx) => {
-                                        // Skip empty options (teacher left placeholder blank)
                                         if (!option || option.trim() === '') return null;
                                         const isSelected = selectedIdx === oIdx;
                                         const isCorrect = q.correct_index === oIdx;
 
                                         let optionStyle = 'bg-white border-vastu-sand/50 hover:border-vastu-gold/50 hover:bg-vastu-cream/30';
+
                                         if (isReviewMode && hasAnswered) {
-                                            if (isCorrect) {
-                                                optionStyle = 'bg-green-50 border-green-300';
-                                            } else if (isSelected && !isCorrect) {
-                                                optionStyle = 'bg-red-50 border-red-300';
+                                            if (isReflection) {
+                                                // Reflection: just highlight the selected answer, no right/wrong
+                                                if (isSelected) {
+                                                    optionStyle = 'bg-purple-50 border-purple-300';
+                                                } else {
+                                                    optionStyle = 'bg-white border-gray-200 opacity-60';
+                                                }
                                             } else {
-                                                optionStyle = 'bg-white border-gray-200 opacity-60';
+                                                // Quiz: show green/red
+                                                if (isCorrect) {
+                                                    optionStyle = 'bg-green-50 border-green-300';
+                                                } else if (isSelected && !isCorrect) {
+                                                    optionStyle = 'bg-red-50 border-red-300';
+                                                } else {
+                                                    optionStyle = 'bg-white border-gray-200 opacity-60';
+                                                }
                                             }
                                         } else if (isSelected) {
-                                            optionStyle = 'bg-vastu-cream border-vastu-gold ring-1 ring-vastu-gold/30';
+                                            optionStyle = isReflection
+                                                ? 'bg-purple-50 border-purple-400 ring-1 ring-purple-300/30'
+                                                : 'bg-vastu-cream border-vastu-gold ring-1 ring-vastu-gold/30';
                                         }
 
                                         return (
@@ -180,11 +238,21 @@ export default function QuizView() {
                                                 className={`w-full text-left p-3 rounded-lg border transition-all flex items-center gap-3 ${optionStyle} ${!isReviewMode ? 'cursor-pointer' : ''}`}
                                             >
                                                 {isReviewMode && hasAnswered ? (
-                                                    isCorrect ? <CheckCircle2 size={18} className="text-green-500 shrink-0" /> :
-                                                    isSelected ? <XCircle size={18} className="text-red-400 shrink-0" /> :
-                                                    <div className="w-[18px] h-[18px] rounded-full border-2 border-gray-300 shrink-0" />
+                                                    isReflection ? (
+                                                        isSelected
+                                                            ? <CheckCircle2 size={18} className="text-purple-500 shrink-0" />
+                                                            : <div className="w-[18px] h-[18px] rounded-full border-2 border-gray-300 shrink-0" />
+                                                    ) : (
+                                                        isCorrect ? <CheckCircle2 size={18} className="text-green-500 shrink-0" /> :
+                                                        isSelected ? <XCircle size={18} className="text-red-400 shrink-0" /> :
+                                                        <div className="w-[18px] h-[18px] rounded-full border-2 border-gray-300 shrink-0" />
+                                                    )
                                                 ) : (
-                                                    <div className={`w-[18px] h-[18px] rounded-full border-2 shrink-0 flex items-center justify-center ${isSelected ? 'border-vastu-gold bg-vastu-gold' : 'border-vastu-sand'}`}>
+                                                    <div className={`w-[18px] h-[18px] rounded-full border-2 shrink-0 flex items-center justify-center ${
+                                                        isSelected
+                                                            ? isReflection ? 'border-purple-500 bg-purple-500' : 'border-vastu-gold bg-vastu-gold'
+                                                            : 'border-vastu-sand'
+                                                    }`}>
                                                         {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
                                                     </div>
                                                 )}
@@ -203,11 +271,15 @@ export default function QuizView() {
                     {!isReviewMode && !viewingPastAttempt && (
                         <button
                             onClick={handleSubmit}
-                            disabled={submitting || Object.keys(answers).length < quiz.questions.length}
-                            className="w-full flex items-center justify-center gap-3 py-4 rounded-xl text-base font-sans font-medium bg-vastu-dark text-white hover:bg-vastu-dark-deep shadow-lg shadow-vastu-dark/15 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            disabled={submitting || Object.keys(answers).length < shuffledQuestions.length}
+                            className={`w-full flex items-center justify-center gap-3 py-4 rounded-xl text-base font-sans font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all ${
+                                isReflection
+                                    ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-purple-600/15'
+                                    : 'bg-vastu-dark text-white hover:bg-vastu-dark-deep shadow-vastu-dark/15'
+                            }`}
                         >
-                            {submitting ? <Loader2 size={20} className="animate-spin" /> : <CheckCircle2 size={20} />}
-                            Quiz abgeben
+                            {submitting ? <Loader2 size={20} className="animate-spin" /> : isReflection ? <Heart size={20} /> : <CheckCircle2 size={20} />}
+                            {isReflection ? 'Reflexion abgeben' : 'Quiz abgeben'}
                         </button>
                     )}
                     {(result || showReview) && (
@@ -216,7 +288,7 @@ export default function QuizView() {
                             className="w-full flex items-center justify-center gap-3 py-4 rounded-xl text-base font-sans font-medium bg-vastu-cream text-vastu-dark hover:bg-vastu-sand/30 border border-vastu-sand/50 transition-all"
                         >
                             <RotateCcw size={20} />
-                            Nochmal versuchen
+                            Nochmal ausfüllen
                         </button>
                     )}
                 </div>
