@@ -26,11 +26,20 @@ export default function AnnouncementBanner() {
 
                 if (error || !data) return;
 
-                // Check if user already dismissed this announcement
-                const dismissedIds = JSON.parse(localStorage.getItem('dismissed-announcements') || '[]');
-                if (dismissedIds.includes(data.id)) return;
+                // Check if user already saw this announcement
+                const seenIds = JSON.parse(localStorage.getItem('seen-announcements') || '[]');
+                if (seenIds.includes(data.id)) return;
 
                 setAnnouncement(data);
+
+                // Auto-mark as seen after 3 seconds (so it won't show again next visit)
+                setTimeout(() => {
+                    const current = JSON.parse(localStorage.getItem('seen-announcements') || '[]');
+                    if (!current.includes(data.id)) {
+                        current.push(data.id);
+                        localStorage.setItem('seen-announcements', JSON.stringify(current));
+                    }
+                }, 3000);
             } catch {
                 // Table might not exist yet — ignore
             }
@@ -40,9 +49,11 @@ export default function AnnouncementBanner() {
 
     const handleDismiss = () => {
         if (announcement) {
-            const dismissedIds = JSON.parse(localStorage.getItem('dismissed-announcements') || '[]');
-            dismissedIds.push(announcement.id);
-            localStorage.setItem('dismissed-announcements', JSON.stringify(dismissedIds));
+            const seenIds = JSON.parse(localStorage.getItem('seen-announcements') || '[]');
+            if (!seenIds.includes(announcement.id)) {
+                seenIds.push(announcement.id);
+                localStorage.setItem('seen-announcements', JSON.stringify(seenIds));
+            }
         }
         setDismissed(true);
     };
