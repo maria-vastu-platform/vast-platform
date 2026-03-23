@@ -100,13 +100,13 @@ export default function QuizResults() {
                 const userIds = [...new Set(attemptData.map(a => a.user_id))];
                 const { data: profiles } = await supabase
                     .from('profiles')
-                    .select('id, email, name, full_name')
+                    .select('id, email, full_name')
                     .in('id', userIds);
 
                 const profileMap: Record<string, { name: string; email: string }> = {};
                 (profiles || []).forEach((p: any) => {
                     profileMap[p.id] = {
-                        name: p.full_name || p.name || 'Unbekannt',
+                        name: p.full_name || p.email?.split('@')[0] || 'Unbekannt',
                         email: p.email || '',
                     };
                 });
