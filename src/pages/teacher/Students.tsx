@@ -32,13 +32,13 @@ export default function Students() {
             try {
                 let profilesRes: any = await supabase
                     .from('profiles')
-                    .select('id, email, full_name, created_at, kohorte_id, kohorte, role')
+                    .select('id, email, name, created_at, kohorte_id, kohorte, role')
                     .eq('role', 'student')
                     .order('created_at', { ascending: false });
                 if (profilesRes.error && isColumnMissing(profilesRes.error, 'kohorte_id')) {
                     profilesRes = await supabase
                         .from('profiles')
-                        .select('id, email, full_name, created_at, kohorte, role')
+                        .select('id, email, name, created_at, kohorte, role')
                         .eq('role', 'student')
                         .order('created_at', { ascending: false });
                 }
@@ -57,7 +57,7 @@ export default function Students() {
 
                 const normalizedStudents = (profilesRes.data || []).map((profile: any) => ({
                     ...profile,
-                    name: profile.full_name || profile.email?.split('@')[0] || null,
+                    name: profile.name || profile.email?.split('@')[0] || null,
                 }));
                 setStudents(normalizedStudents);
             } catch (error) {
