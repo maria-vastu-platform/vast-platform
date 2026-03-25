@@ -21,9 +21,9 @@ function shuffleQuestions(questions: QuizQuestion[]): QuizQuestion[] {
 }
 
 export default function QuizView() {
-    const { moduleId } = useParams();
+    const { moduleId, quizId } = useParams();
     const navigate = useNavigate();
-    const { quiz, loading, lastAttempt, submitAttempt } = useQuiz(moduleId);
+    const { quiz, loading, lastAttempt, submitAttempt } = useQuiz(quizId);
     const [answers, setAnswers] = useState<Record<string, number>>({});
     const [submitting, setSubmitting] = useState(false);
     const [result, setResult] = useState<{ score: number; total: number } | null>(null);
