@@ -142,16 +142,19 @@ export default function QuizEditor({ moduleId }: QuizEditorProps) {
         setBlocks(prev => prev.filter((_, i) => i !== idx));
     };
 
-    const addNewQuiz = (type: QuizType) => {
-        setBlocks(prev => [...prev, {
-            quizId: null,
-            title: type === 'reflection' ? 'Reflexion' : 'Quiz',
-            description: '',
-            quizType: type,
-            questions: [],
-            isDirty: true,
-            saving: false,
-        }]);
+    const addNewQuiz = async (type: QuizType) => {
+        try {
+            const title = type === 'reflection' ? 'Reflexion' : 'Quiz';
+            const { error } = await supabase
+                .from('quizzes')
+                .insert({ week_id: moduleId, title, quiz_type: type });
+            if (error) throw error;
+            // Refetch so the new quiz appears with a real ID (survives re-renders)
+            await fetchQuizzes();
+        } catch (error: any) {
+            console.error('Error creating quiz:', error);
+            alert('Fehler beim Erstellen: ' + (error?.message || 'Unbekannter Fehler'));
+        }
     };
 
     const addQuestion = (blockIdx: number) => {
