@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { LibraryItem, LibraryCategory } from '../../lib/types';
-import { Plus, Trash2, FileText, Save, X, Link as LinkIcon, Upload } from 'lucide-react';
+import { Plus, Trash2, FileText, Save, X, Link as LinkIcon, Upload, AlertTriangle } from 'lucide-react';
+import { uploadLibraryFile, checkLibraryBucket, BUCKET_MISSING_MESSAGE } from '../../lib/uploadLibraryFile';
 
 export default function ManageLibrary() {
     const [items, setItems] = useState<LibraryItem[]>([]);
@@ -11,12 +12,20 @@ export default function ManageLibrary() {
 
     const [isDragging, setIsDragging] = useState(false);
     const [uploadingFiles, setUploadingFiles] = useState<string[]>([]);
+    const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+    const [bucketError, setBucketError] = useState<string | null>(null);
 
     const [formData, setFormData] = useState<Partial<LibraryItem>>({
         title: '', category: 'slides', file_url: '', description: ''
     });
 
     useEffect(() => { fetchLibrary(); }, []);
+    useEffect(() => {
+        if (!import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('placeholder')) return;
+        checkLibraryBucket().then(res => {
+            if (!res.ok) setBucketError(res.error || BUCKET_MISSING_MESSAGE);
+        });
+    }, []);
 
     async function fetchLibrary() {
         try {
@@ -104,23 +113,25 @@ export default function ManageLibrary() {
 
         for (const file of files) {
             try {
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Math.random()}.${fileExt}`;
-                const { error: uploadError } = await supabase.storage.from('library_files').upload(fileName, file);
-                if (uploadError) throw uploadError;
-
-                const { data: { publicUrl } } = supabase.storage.from('library_files').getPublicUrl(fileName);
+                const result = await uploadLibraryFile(file, {
+                    onProgress: fraction => setUploadProgress(prev => ({ ...prev, [file.name]: fraction })),
+                });
+                if (!result.ok) {
+                    if (result.bucketMissing) setBucketError(result.error);
+                    throw new Error(result.error);
+                }
                 const title = file.name.replace(/\.[^/.]+$/, "");
 
                 const { error: dbError } = await supabase.from('library_items').insert([{
-                    title, category: 'slides', file_url: publicUrl, description: 'Per Drag & Drop hochgeladen'
+                    title, category: 'slides', file_url: result.url, description: 'Per Drag & Drop hochgeladen'
                 }]);
                 if (dbError) throw dbError;
                 successCount++;
-            } catch (error) {
-                alert(`Fehler beim Hochladen von ${file.name}`);
+            } catch (error: any) {
+                alert(`Fehler beim Hochladen von ${file.name}: ${error?.message ?? error}`);
             } finally {
                 setUploadingFiles(prev => prev.filter(name => name !== file.name));
+                setUploadProgress(prev => { const { [file.name]: _, ...rest } = prev; return rest; });
             }
         }
         if (successCount > 0) fetchLibrary();
@@ -144,6 +155,19 @@ export default function ManageLibrary() {
                     Material hinzufügen
                 </button>
             </div>
+
+            {bucketError && (
+                <div className="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-800">
+                    <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+                    <div>
+                        <div className="font-semibold mb-1">Storage nicht konfiguriert</div>
+                        <div className="text-red-700">{bucketError}</div>
+                        <div className="mt-2 text-xs text-red-600">
+                            Solange der Bucket fehlt, schlagen alle Uploads fehl und vorhandene Links sind defekt.
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Master File Settings */}
             <div className="bg-gradient-to-r from-vastu-gold/10 to-yellow-50 rounded-xl p-8 mb-8 border border-vastu-gold/20">
@@ -183,18 +207,18 @@ export default function ManageLibrary() {
                                 if (!file) return;
                                 try {
                                     setLoading(true);
-                                    const fileExt = file.name.split('.').pop();
-                                    const fileName = `master-${Math.random()}.${fileExt}`;
-                                    const { error: uploadError } = await supabase.storage.from('library_files').upload(fileName, file);
-                                    if (uploadError) throw uploadError;
-                                    const { data: { publicUrl } } = supabase.storage.from('library_files').getPublicUrl(fileName);
+                                    const result = await uploadLibraryFile(file, { prefix: 'master' });
+                                    if (!result.ok) {
+                                        if (result.bucketMissing) setBucketError(result.error);
+                                        throw new Error(result.error);
+                                    }
                                     const title = file.name.replace(/\.[^/.]+$/, "");
 
                                     // Insert new master file
                                     const { error: insertError } = await supabase.from('library_items').insert([{
                                         title,
                                         category: 'guide', // Use guide as category but mark as master
-                                        file_url: publicUrl,
+                                        file_url: result.url,
                                         description: 'Master File',
                                         is_master_file: true
                                     }]);
@@ -253,14 +277,28 @@ export default function ManageLibrary() {
             {/* Upload Progress */}
             {uploadingFiles.length > 0 && (
                 <div className="mb-8 bg-blue-50 border border-blue-100 rounded-xl p-4">
-                    <h4 className="text-sm font-bold text-blue-800 mb-2 flex items-center">
+                    <h4 className="text-sm font-bold text-blue-800 mb-3 flex items-center">
                         <div className="animate-spin mr-2 h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
                         Dateien werden hochgeladen ({uploadingFiles.length})...
                     </h4>
-                    <ul className="space-y-1">
-                        {uploadingFiles.map((name, idx) => (
-                            <li key={idx} className="text-xs text-blue-600 truncate">{name}</li>
-                        ))}
+                    <ul className="space-y-2">
+                        {uploadingFiles.map((name, idx) => {
+                            const pct = Math.round(((uploadProgress[name] ?? 0) * 100));
+                            return (
+                                <li key={idx} className="text-xs text-blue-700">
+                                    <div className="flex justify-between items-center gap-4 mb-1">
+                                        <span className="truncate">{name}</span>
+                                        <span className="font-mono shrink-0">{pct}%</span>
+                                    </div>
+                                    <div className="h-1.5 bg-blue-100 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-blue-500 transition-all duration-200"
+                                            style={{ width: `${pct}%` }}
+                                        />
+                                    </div>
+                                </li>
+                            );
+                        })}
                     </ul>
                 </div>
             )}
@@ -332,14 +370,14 @@ export default function ManageLibrary() {
                                             if (!file) return;
                                             try {
                                                 setLoading(true);
-                                                const fileExt = file.name.split('.').pop();
-                                                const fileName = `${Math.random()}.${fileExt}`;
-                                                const { error: uploadError } = await supabase.storage.from('library_files').upload(fileName, file);
-                                                if (uploadError) throw uploadError;
-                                                const { data: { publicUrl } } = supabase.storage.from('library_files').getPublicUrl(fileName);
-                                                setFormData({ ...formData, file_url: publicUrl });
-                                            } catch (error) {
-                                                alert('Fehler beim Hochladen');
+                                                const result = await uploadLibraryFile(file);
+                                                if (!result.ok) {
+                                                    if (result.bucketMissing) setBucketError(result.error);
+                                                    throw new Error(result.error);
+                                                }
+                                                setFormData({ ...formData, file_url: result.url });
+                                            } catch (error: any) {
+                                                alert(`Fehler beim Hochladen: ${error?.message ?? error}`);
                                             } finally {
                                                 setLoading(false);
                                             }

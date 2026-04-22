@@ -1,9 +1,10 @@
-import { FileText, Download, Loader2, BookOpen, Presentation, Gift, BookMarked, ArrowLeft, ExternalLink, Lock } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { FileText, Download, Loader2, BookOpen, Presentation, Gift, BookMarked, ArrowLeft, ExternalLink, Lock, AlertTriangle } from 'lucide-react';
+import { useEffect, useState, MouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { LibraryItem, LibraryCategory } from '../../lib/types';
 import { navigateBackOr } from '../../lib/utils';
+import { resolveLibraryFileUrl, isLibraryStorageUrl } from '../../lib/uploadLibraryFile';
 
 const CATEGORIES: { key: LibraryCategory | 'all'; label: string; icon: any }[] = [
     { key: 'all', label: 'Alle', icon: BookOpen },
@@ -17,7 +18,26 @@ export default function Library() {
     const [items, setItems] = useState<LibraryItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeCategory, setActiveCategory] = useState<string>('all');
+    const [brokenIds, setBrokenIds] = useState<Set<string>>(new Set());
+    const [openingId, setOpeningId] = useState<string | null>(null);
     const navigate = useNavigate();
+
+    const handleFileOpen = async (e: MouseEvent<HTMLAnchorElement>, item: LibraryItem) => {
+        if (!isLibraryStorageUrl(item.file_url)) return;
+        e.preventDefault();
+        if (openingId === item.id) return;
+        setOpeningId(item.id);
+        try {
+            const res = await resolveLibraryFileUrl(item.file_url);
+            if ('error' in res) {
+                setBrokenIds(prev => new Set(prev).add(item.id));
+                return;
+            }
+            window.open(res.url, '_blank', 'noopener,noreferrer');
+        } finally {
+            setOpeningId(null);
+        }
+    };
 
     useEffect(() => {
         async function fetchLibrary() {
@@ -154,11 +174,17 @@ export default function Library() {
                                     <Lock size={18} />
                                     <span className="text-sm">Ab {new Date(masterFile.available_from).toLocaleDateString('de-DE')}</span>
                                 </div>
+                            ) : brokenIds.has(masterFile.id) ? (
+                                <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-3 rounded-lg text-sm flex items-center gap-2 whitespace-nowrap">
+                                    <AlertTriangle size={18} />
+                                    <span>Datei momentan nicht verfügbar</span>
+                                </div>
                             ) : (
                                 <a
                                     href={masterFile.file_url}
                                     target="_blank"
                                     rel="noreferrer"
+                                    onClick={e => handleFileOpen(e, masterFile)}
                                     className="bg-vastu-dark text-white px-8 py-3 rounded-lg font-medium flex items-center gap-2 hover:bg-vastu-dark/90 transition-colors shadow-md whitespace-nowrap"
                                 >
                                     <Download size={20} />
@@ -244,6 +270,8 @@ export default function Library() {
                             {filteredItems.map((item) => {
                                 const isLocked = item.available_from && new Date(item.available_from) > new Date();
 
+                                const isBroken = brokenIds.has(item.id);
+
                                 return isLocked ? (
                                     <div
                                         key={item.id}
@@ -267,12 +295,28 @@ export default function Library() {
                                             </div>
                                         </div>
                                     </div>
+                                ) : isBroken ? (
+                                    <div
+                                        key={item.id}
+                                        className="pdf-card flex items-start gap-4 p-5 bg-red-50 rounded-xl border border-red-200"
+                                    >
+                                        <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-white border border-red-200">
+                                            <AlertTriangle size={18} className="text-red-500" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-serif font-medium text-vastu-dark mb-1">{item.title}</div>
+                                            <p className="text-sm font-body text-red-700">
+                                                Diese Datei ist momentan nicht verfügbar. Wir arbeiten daran — bitte später erneut versuchen.
+                                            </p>
+                                        </div>
+                                    </div>
                                 ) : (
                                     <a
                                         key={item.id}
                                         href={item.file_url}
                                         target="_blank"
                                         rel="noreferrer"
+                                        onClick={e => handleFileOpen(e, item)}
                                         className="pdf-card flex items-start gap-4 p-5 bg-vastu-cream/40 rounded-xl border border-vastu-sand/30 hover:border-vastu-gold/30 hover:bg-vastu-cream/70 group transition-all"
                                     >
                                         <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-white border border-vastu-sand/30 group-hover:shadow-sm transition-all">
