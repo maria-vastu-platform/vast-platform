@@ -4,56 +4,12 @@ import { ArrowLeft, Star, Send, CheckCircle2, Loader2, Heart } from 'lucide-reac
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { navigateBackOr } from '../../lib/utils';
-import { FeedbackAnswers, FeedbackResponse } from '../../lib/types';
-
-interface FeedbackQuestion {
-    key: string;
-    label: string;
-    helper?: string;
-    kind: 'rating' | 'text' | 'choice';
-    choices?: { value: string; label: string }[];
-    optional?: boolean;
-}
-
-const QUESTIONS: FeedbackQuestion[] = [
-    {
-        key: 'overall_rating',
-        label: 'Wie würdest du den Kurs insgesamt bewerten?',
-        helper: '1 Stern = nicht hilfreich, 5 Sterne = absolut top',
-        kind: 'rating',
-    },
-    {
-        key: 'liked_most',
-        label: 'Was hat dir am besten gefallen?',
-        kind: 'text',
-    },
-    {
-        key: 'improve',
-        label: 'Was könnten wir verbessern?',
-        kind: 'text',
-    },
-    {
-        key: 'recommend',
-        label: 'Würdest du diese Ausbildung weiterempfehlen?',
-        kind: 'choice',
-        choices: [
-            { value: 'yes', label: 'Ja, auf jeden Fall' },
-            { value: 'maybe', label: 'Vielleicht' },
-            { value: 'no', label: 'Eher nicht' },
-        ],
-    },
-    {
-        key: 'additional_thoughts',
-        label: 'Möchtest du Maria noch etwas mitteilen?',
-        helper: 'Optional — alles, was dir auf dem Herzen liegt',
-        kind: 'text',
-        optional: true,
-    },
-];
+import { FeedbackAnswers, FeedbackResponse, FeedbackQuestion } from '../../lib/types';
 
 export default function FeedbackPage() {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const [questions, setQuestions] = useState<FeedbackQuestion[]>([]);
     const [answers, setAnswers] = useState<FeedbackAnswers>({});
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -63,18 +19,29 @@ export default function FeedbackPage() {
     useEffect(() => {
         if (!user) return;
         (async () => {
-            const { data, error: fetchError } = await supabase
+            // Questions
+            const { data: qs, error: qErr } = await supabase
+                .from('feedback_questions')
+                .select('*')
+                .eq('is_active', true)
+                .order('order_index', { ascending: true });
+            if (qErr) {
+                console.warn('feedback_questions fetch failed:', qErr.message);
+            }
+            setQuestions((qs as FeedbackQuestion[]) || []);
+
+            // Existing answers
+            const { data: rs, error: rErr } = await supabase
                 .from('feedback_responses')
                 .select('*')
                 .eq('user_id', user.id);
-            if (fetchError) {
-                // Table not yet provisioned — treat as no prior submission, form still works.
-                console.warn('feedback_responses fetch failed (table may not exist yet):', fetchError.message);
+            if (rErr) {
+                console.warn('feedback_responses fetch failed:', rErr.message);
                 setLoading(false);
                 return;
             }
             const existing: FeedbackAnswers = {};
-            (data as FeedbackResponse[]).forEach(r => {
+            (rs as FeedbackResponse[]).forEach(r => {
                 existing[r.question_key] = {
                     rating: r.answer_rating ?? undefined,
                     text: r.answer_text ?? undefined,
@@ -92,9 +59,9 @@ export default function FeedbackPage() {
     const setText = (key: string, value: string) =>
         setAnswers(prev => ({ ...prev, [key]: { ...prev[key], text: value } }));
 
-    const isValid = QUESTIONS.every(q => {
+    const isValid = questions.every(q => {
         if (q.optional) return true;
-        const a = answers[q.key];
+        const a = answers[q.question_key];
         if (!a) return false;
         if (q.kind === 'rating') return typeof a.rating === 'number' && a.rating >= 1 && a.rating <= 5;
         if (q.kind === 'text' || q.kind === 'choice') return !!a.text && a.text.trim().length > 0;
@@ -106,13 +73,13 @@ export default function FeedbackPage() {
         setSubmitting(true);
         setError(null);
         try {
-            const rows = QUESTIONS
-                .filter(q => answers[q.key] && (answers[q.key].rating !== undefined || (answers[q.key].text || '').trim() !== ''))
+            const rows = questions
+                .filter(q => answers[q.question_key] && (answers[q.question_key].rating !== undefined || (answers[q.question_key].text || '').trim() !== ''))
                 .map(q => ({
                     user_id: user.id,
-                    question_key: q.key,
-                    answer_rating: answers[q.key].rating ?? null,
-                    answer_text: answers[q.key].text?.trim() || null,
+                    question_key: q.question_key,
+                    answer_rating: answers[q.question_key].rating ?? null,
+                    answer_text: answers[q.question_key].text?.trim() || null,
                     updated_at: new Date().toISOString(),
                 }));
 
@@ -159,7 +126,13 @@ export default function FeedbackPage() {
                 </div>
             </div>
 
-            {submitted ? (
+            {questions.length === 0 ? (
+                <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 p-8 text-center">
+                    <p className="text-vastu-text-light font-body">
+                        Der Feedbackbogen wird bald freigeschaltet — schau gleich nochmal vorbei.
+                    </p>
+                </div>
+            ) : submitted ? (
                 <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 p-8 md:p-12 text-center">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-50 flex items-center justify-center">
                         <CheckCircle2 className="text-green-500" size={32} />
@@ -177,8 +150,8 @@ export default function FeedbackPage() {
                 </div>
             ) : (
                 <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 p-6 md:p-10 space-y-8">
-                    {QUESTIONS.map((q, idx) => (
-                        <div key={q.key} className="space-y-3">
+                    {questions.map((q, idx) => (
+                        <div key={q.id} className="space-y-3">
                             <div>
                                 <label className="font-serif text-lg text-vastu-dark block">
                                     <span className="text-vastu-gold mr-2">{(idx + 1).toString().padStart(2, '0')}</span>
@@ -193,12 +166,12 @@ export default function FeedbackPage() {
                             {q.kind === 'rating' && (
                                 <div className="flex items-center gap-2">
                                     {[1, 2, 3, 4, 5].map(n => {
-                                        const active = (answers[q.key]?.rating ?? 0) >= n;
+                                        const active = (answers[q.question_key]?.rating ?? 0) >= n;
                                         return (
                                             <button
                                                 key={n}
                                                 type="button"
-                                                onClick={() => setRating(q.key, n)}
+                                                onClick={() => setRating(q.question_key, n)}
                                                 className={`p-2 rounded-lg transition-all ${
                                                     active
                                                         ? 'text-vastu-gold scale-110'
@@ -216,22 +189,22 @@ export default function FeedbackPage() {
                             {q.kind === 'text' && (
                                 <textarea
                                     rows={4}
-                                    value={answers[q.key]?.text ?? ''}
-                                    onChange={e => setText(q.key, e.target.value)}
+                                    value={answers[q.question_key]?.text ?? ''}
+                                    onChange={e => setText(q.question_key, e.target.value)}
                                     className="w-full rounded-xl border-vastu-sand/60 focus:ring-vastu-gold focus:border-vastu-gold font-body text-vastu-dark resize-none"
                                     placeholder="Deine Antwort..."
                                 />
                             )}
 
-                            {q.kind === 'choice' && q.choices && (
+                            {q.kind === 'choice' && q.choices && q.choices.length > 0 && (
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                     {q.choices.map(c => {
-                                        const active = answers[q.key]?.text === c.value;
+                                        const active = answers[q.question_key]?.text === c.value;
                                         return (
                                             <button
                                                 key={c.value}
                                                 type="button"
-                                                onClick={() => setText(q.key, c.value)}
+                                                onClick={() => setText(q.question_key, c.value)}
                                                 className={`px-4 py-3 rounded-xl border text-sm font-sans transition-all ${
                                                     active
                                                         ? 'bg-vastu-gold/15 border-vastu-gold text-vastu-dark font-medium'
