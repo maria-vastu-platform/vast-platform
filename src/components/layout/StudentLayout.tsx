@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
-import { LogOut, User as UserIcon, Menu, X, Loader2, BookOpen, Library, Lock, ChevronDown, ChevronRight, Home, Smartphone } from 'lucide-react';
+import { LogOut, User as UserIcon, Menu, X, Loader2, BookOpen, Library, Lock, ChevronDown, ChevronRight, Home, Smartphone, Heart } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../contexts/AuthContext';
@@ -149,6 +149,23 @@ export default function StudentLayout() {
                                         );
                                     })
                                 )}
+                                {/* Feedback as virtual module at end of course list */}
+                                {!modulesLoading && (
+                                    <button
+                                        onClick={() => navigate('/student/feedback')}
+                                        className={cn(
+                                            "w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm transition-all text-left group mt-1",
+                                            location.pathname.includes('/feedback')
+                                                ? "bg-white/40 text-vastu-dark font-medium border-l-2 border-vastu-gold -ml-[1px]"
+                                                : "text-vastu-dark/55 hover:text-vastu-dark hover:bg-white/20"
+                                        )}
+                                    >
+                                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                                            <Heart size={12} className="flex-shrink-0 text-vastu-gold mt-1" />
+                                            <span className="whitespace-normal leading-tight break-words font-sans">Feedback</span>
+                                        </div>
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>
@@ -244,6 +261,24 @@ export default function StudentLayout() {
                                             {mod.isLocked && <Lock size={12} />}
                                         </button>
                                     ))}
+                                    {/* Feedback as virtual module */}
+                                    <button
+                                        onClick={() => {
+                                            navigate('/student/feedback');
+                                            setIsMobileMenuOpen(false);
+                                        }}
+                                        className={cn(
+                                            "w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm transition-all text-left font-sans",
+                                            location.pathname.includes('/feedback')
+                                                ? "bg-white/40 text-vastu-dark font-medium"
+                                                : "text-vastu-dark/60"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <Heart size={14} className="text-vastu-gold" />
+                                            <span>Feedback</span>
+                                        </div>
+                                    </button>
                                 </div>
 
                                 <NavItem

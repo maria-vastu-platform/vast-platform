@@ -8,6 +8,7 @@ import QuizView from './pages/student/QuizView';
 import Library from './pages/student/Library';
 import Profile from './pages/student/Profile';
 import InstallGuide from './pages/student/InstallGuide';
+import FeedbackPage from './pages/student/Feedback';
 
 import TeacherLayout from './components/layout/TeacherLayout';
 import CourseEditor from './pages/teacher/CourseEditor';
@@ -16,6 +17,7 @@ import ManageLibrary from './pages/teacher/ManageLibrary';
 import ManageKohorten from './pages/teacher/ManageKohorten';
 import SettingsPage from './pages/teacher/SettingsPage';
 import QuizResults from './pages/teacher/QuizResults';
+import TeacherFeedback from './pages/teacher/Feedback';
 
 import { AuthProvider } from './contexts/AuthContext';
 import RegisterPage from './pages/RegisterPage';
@@ -69,6 +71,7 @@ function App() {
                         <Route path="library" element={<Library />} />
                         <Route path="profile" element={<Profile />} />
                         <Route path="install" element={<InstallGuide />} />
+                        <Route path="feedback" element={<FeedbackPage />} />
                     </Route>
 
                     {/* Teacher Routes */}
@@ -79,6 +82,7 @@ function App() {
                         <Route path="library" element={<ManageLibrary />} />
                         <Route path="kohorten" element={<ManageKohorten />} />
                         <Route path="quiz-results" element={<QuizResults />} />
+                        <Route path="feedback" element={<TeacherFeedback />} />
                         <Route path="settings" element={<SettingsPage />} />
                     </Route>
 

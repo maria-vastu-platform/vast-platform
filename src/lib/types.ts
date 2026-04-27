@@ -139,3 +139,15 @@ export interface QuizAttempt {
     total: number;
     completed_at: string;
 }
+
+export interface FeedbackResponse {
+    id: string;
+    user_id: string;
+    question_key: string;
+    answer_rating: number | null;
+    answer_text: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export type FeedbackAnswers = Record<string, { rating?: number; text?: string }>;
