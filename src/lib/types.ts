@@ -151,3 +151,24 @@ export interface FeedbackResponse {
 }
 
 export type FeedbackAnswers = Record<string, { rating?: number; text?: string }>;
+
+export type FeedbackQuestionKind = 'rating' | 'text' | 'choice';
+
+export interface FeedbackChoice {
+    value: string;
+    label: string;
+}
+
+export interface FeedbackQuestion {
+    id: string;
+    question_key: string;
+    label: string;
+    helper: string | null;
+    kind: FeedbackQuestionKind;
+    choices: FeedbackChoice[] | null;
+    optional: boolean;
+    order_index: number;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
