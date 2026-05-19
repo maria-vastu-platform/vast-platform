@@ -11,14 +11,12 @@ import VimeoPlayer from '../../components/VimeoPlayer';
 import { CalendarEvent, CourseSettings, UsefulLink } from '../../lib/types';
 
 function formatEventDate(iso: string): string {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return iso;
-    // Vastu's original schedule showed only day.month (e.g. "20.03") —
-    // no year, no time. Keep that exact format; the stored datetime's
-    // year/time are not displayed.
-    const dd = String(d.getDate()).padStart(2, '0');
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    return `${dd}.${mm}`;
+    // Stored value is a plain date "YYYY-MM-DD" (older rows may have a
+    // trailing "THH:mm"). Parse the date part by string — no Date()
+    // object, so no timezone day-shift. Show "DD.MM" like Vastu always did.
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
+    if (!m) return iso;
+    return `${m[3]}.${m[2]}`;
 }
 
 export default function WelcomePage() {

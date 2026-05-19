@@ -311,15 +311,13 @@ export default function WelcomeEditor() {
                                             />
                                         </div>
                                         <div>
-                                            <label className={labelClass}>Datum & Uhrzeit</label>
+                                            <label className={labelClass}>Datum</label>
                                             <input
-                                                type="datetime-local"
-                                                value={ev.datetime?.slice(0, 16) || ''}
+                                                type="date"
+                                                value={ev.datetime?.slice(0, 10) || ''}
                                                 onChange={e => {
                                                     const next = [...data.calendar_events];
-                                                    // Store the naive local value exactly as entered (YYYY-MM-DDTHH:mm).
-                                                    // Converting through Date→toISOString() shifted it by the timezone
-                                                    // offset on every keystroke, so the field appeared to jump back.
+                                                    // Store the plain date exactly as entered (YYYY-MM-DD).
                                                     next[i] = { ...next[i], datetime: e.target.value };
                                                     update({ calendar_events: next });
                                                 }}
