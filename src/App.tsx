@@ -15,11 +15,13 @@ import CourseEditor from './pages/teacher/CourseEditor';
 import Students from './pages/teacher/Students';
 import ManageLibrary from './pages/teacher/ManageLibrary';
 import ManageKohorten from './pages/teacher/ManageKohorten';
+import WelcomeEditor from './pages/teacher/WelcomeEditor';
 import SettingsPage from './pages/teacher/SettingsPage';
 import QuizResults from './pages/teacher/QuizResults';
 import TeacherFeedback from './pages/teacher/Feedback';
 
 import { AuthProvider } from './contexts/AuthContext';
+import { CourseProvider } from './contexts/CourseContext';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import UpdatePasswordPage from './pages/UpdatePasswordPage';
@@ -53,6 +55,7 @@ function App() {
 
     return (
         <AuthProvider>
+            <CourseProvider>
             <Router>
                 <Routes>
                     <Route path="/login" element={<LoginPage />} />
@@ -81,6 +84,7 @@ function App() {
                         <Route path="students" element={<Students />} />
                         <Route path="library" element={<ManageLibrary />} />
                         <Route path="kohorten" element={<ManageKohorten />} />
+                        <Route path="welcome-seite" element={<WelcomeEditor />} />
                         <Route path="quiz-results" element={<QuizResults />} />
                         <Route path="feedback" element={<TeacherFeedback />} />
                         <Route path="settings" element={<SettingsPage />} />
@@ -90,6 +94,7 @@ function App() {
                     <Route path="/" element={<Navigate to="/login" replace />} />
                 </Routes>
             </Router>
+            </CourseProvider>
         </AuthProvider>
     );
 }

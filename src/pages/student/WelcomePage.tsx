@@ -1,30 +1,48 @@
 import { ExternalLink, Play, Calendar, Video, MessageCircle, Star, ArrowRight, BookOpen, Library, Smartphone, LogOut, Map, Loader2 } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCourseContext } from '../../contexts/CourseContext';
 import { useModules } from '../../hooks/useCourse';
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { getVideoEmbedUrl } from '../../lib/utils';
 import VimeoPlayer from '../../components/VimeoPlayer';
+import { CalendarEvent, CourseSettings, UsefulLink } from '../../lib/types';
+
+function formatEventDate(iso: string): string {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    return d.toLocaleString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+}
 
 export default function WelcomePage() {
-    const { user, signOut, loading, role } = useAuth();
+    const { user, signOut, loading, role, isDemo } = useAuth();
+    const { activeCourseId } = useCourseContext();
     const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Teilnehmer';
     const { modules } = useModules();
-    const { isDemo } = useAuth();
 
-    // Dynamic Settings State
-    const [settings, setSettings] = useState<{
-        welcome_video_url?: string;
-        zoom_link?: string;
-        telegram_link?: string;
-        vastu_map_link?: string;
-        instruction_url?: string;
-    } | null>(null);
-    const welcomeVideoUrl = settings?.welcome_video_url?.trim() || '';
+    // Per-cohort welcome settings (Phase 2E). The generic help link
+    // (instruction_url) stays global in platform_settings.
+    const [courseSettings, setCourseSettings] = useState<CourseSettings | null>(null);
+    const [globalInstructionUrl, setGlobalInstructionUrl] = useState<string | null>(null);
+
+    const welcomeVideoUrl = courseSettings?.welcome_video_url?.trim() || '';
     const isVimeoWelcomeVideo = welcomeVideoUrl.includes('vimeo.com');
     const embedWelcomeUrl = isVimeoWelcomeVideo ? '' : getVideoEmbedUrl(welcomeVideoUrl);
+
+    const zoomLink = courseSettings?.zoom_link?.trim() || '';
+    const telegramLink = courseSettings?.telegram_link?.trim() || '';
+    const externalToolUrl = courseSettings?.external_tool_url?.trim() || 'https://www.vastusphere.net';
+    const externalToolLabel = courseSettings?.external_tool_label?.trim() || 'Vastu Karte erstellen';
+    const calendarEvents: CalendarEvent[] = courseSettings?.calendar_events ?? [];
+    const usefulLinks: UsefulLink[] = courseSettings?.useful_links ?? [];
 
     // Calculate overall course progress
     const mainModules = modules.filter(m => m.id !== 'pre' && m.id !== 'bonus');
@@ -33,25 +51,47 @@ export default function WelcomePage() {
     const progressPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
     useEffect(() => {
-        async function fetchSettings() {
-            if (isDemo) {
-                setSettings({
-                    welcome_video_url: 'https://player.vimeo.com/video/placeholder',
-                    zoom_link: 'https://zoom.us',
-                    telegram_link: 'https://t.me',
-                    vastu_map_link: 'https://www.vastusphere.net'
-                });
+        async function loadCourseSettings() {
+            if (isDemo || !activeCourseId) {
+                setCourseSettings(null);
                 return;
             }
+            const { data, error } = await supabase
+                .from('course_settings')
+                .select('*')
+                .eq('course_id', activeCourseId)
+                .maybeSingle();
+            if (error) {
+                console.warn('course_settings load failed:', error.message);
+                setCourseSettings(null);
+                return;
+            }
+            if (!data) {
+                setCourseSettings(null);
+                return;
+            }
+            setCourseSettings({
+                ...data,
+                useful_links: Array.isArray(data.useful_links) ? data.useful_links : [],
+                calendar_events: Array.isArray(data.calendar_events) ? data.calendar_events : [],
+            } as CourseSettings);
+        }
+        loadCourseSettings();
+    }, [activeCourseId, isDemo]);
 
+    useEffect(() => {
+        async function loadGlobal() {
+            if (isDemo) return;
             try {
-                const { data } = await supabase.from('platform_settings').select('*').single();
-                if (data) setSettings(data);
+                // Vastu's platform_settings holds a single row (original code used
+                // .single()); don't assume an id value — just take the row.
+                const { data } = await supabase.from('platform_settings').select('instruction_url').limit(1).maybeSingle();
+                if (data?.instruction_url) setGlobalInstructionUrl(data.instruction_url);
             } catch (err) {
-                console.error('Error fetching settings:', err);
+                console.error('Error fetching platform settings:', err);
             }
         }
-        fetchSettings();
+        loadGlobal();
     }, [isDemo]);
 
     if (loading) return <div className="min-h-screen bg-vastu-dark-deep flex items-center justify-center"><Loader2 className="animate-spin text-vastu-gold" size={40} /></div>;
@@ -112,9 +152,9 @@ export default function WelcomePage() {
                         <div className="w-20 h-px bg-gradient-to-l from-transparent to-vastu-gold/50" />
                     </div>
 
-                    <p className="text-white/60 font-body text-lg md:text-xl leading-relaxed mb-10 max-w-xl mx-auto animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                        Dein Weg zu einem harmonischen Zuhause beginnt hier. Entdecke die Kraft von Vastu
-                        und verwandle dein Leben durch bewusstes Raumdesign.
+                    <p className="text-white/60 font-body text-lg md:text-xl leading-relaxed mb-10 max-w-xl mx-auto animate-fade-in whitespace-pre-line" style={{ animationDelay: '0.4s' }}>
+                        {courseSettings?.welcome_intro?.trim() ||
+                            'Dein Weg zu einem harmonischen Zuhause beginnt hier. Entdecke die Kraft von Vastu und verwandle dein Leben durch bewusstes Raumdesign.'}
                     </p>
 
                     {/* CTA */}
@@ -177,8 +217,36 @@ export default function WelcomePage() {
                             <Calendar className="text-vastu-gold" size={20} />
                             Unsere Treffen
                         </h3>
-                        <p className="text-vastu-text-light font-body text-sm mb-5">Mittwochs um 9 Uhr [inkl. Aufzeichnung]</p>
+                        <p className="text-vastu-text-light font-body text-sm mb-5">
+                            {calendarEvents.length > 0
+                                ? 'Termine für deine Kohorte'
+                                : 'Mittwochs um 9 Uhr [inkl. Aufzeichnung]'}
+                        </p>
 
+                        {calendarEvents.length > 0 ? (
+                            <div className="relative pl-6 space-y-1">
+                                <div className="absolute left-[9px] top-2 bottom-2 w-px bg-vastu-sand" />
+                                {calendarEvents.map((ev, i) => (
+                                    <div key={i} className="relative py-2">
+                                        <div className="flex items-start gap-3">
+                                            <div className="absolute left-[-15px] top-[11px] w-[7px] h-[7px] rounded-full bg-vastu-gold ring-4 ring-vastu-gold/20" />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="font-sans text-sm font-medium text-vastu-dark">{ev.label}</span>
+                                                    <span className="text-vastu-text-light font-sans text-xs ml-auto shrink-0">{formatEventDate(ev.datetime)}</span>
+                                                </div>
+                                                {ev.description && (
+                                                    <p className="text-xs font-body text-vastu-text-light pl-2 border-l border-vastu-sand/50 mt-1">{ev.description}</p>
+                                                )}
+                                                {ev.url && (
+                                                    <a href={ev.url} target="_blank" rel="noreferrer" className="text-xs font-sans text-vastu-gold hover:underline mt-1 inline-block">Öffnen</a>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
                         <div className="relative pl-6 space-y-1">
                             <div className="absolute left-[9px] top-2 bottom-2 w-px bg-vastu-sand" />
                             {[
@@ -260,12 +328,13 @@ export default function WelcomePage() {
                                 <span className="text-vastu-dark font-sans text-xs font-semibold ml-auto">21.06</span>
                             </div>
                         </div>
+                        )}
                     </div>
 
                     {/* Quick Links */}
                     <div className="space-y-4">
-                        {settings?.zoom_link && settings.zoom_link.trim() !== '' && (
-                            <a href={settings.zoom_link} target="_blank" rel="noopener noreferrer"
+                        {zoomLink !== '' && (
+                            <a href={zoomLink} target="_blank" rel="noopener noreferrer"
                                 className="block bg-white rounded-2xl shadow-sm border border-vastu-sand/50 p-5 hover:shadow-md hover:border-vastu-gold/30 transition-all group">
                                 <div className="flex items-center gap-4">
                                     <div className="w-[52px] h-[52px] rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors shrink-0">
@@ -280,8 +349,8 @@ export default function WelcomePage() {
                             </a>
                         )}
 
-                        {settings?.telegram_link && settings.telegram_link.trim() !== '' && (
-                            <a href={settings.telegram_link} target="_blank" rel="noopener noreferrer"
+                        {telegramLink !== '' && (
+                            <a href={telegramLink} target="_blank" rel="noopener noreferrer"
                                 className="block bg-white rounded-2xl shadow-sm border border-vastu-sand/50 p-5 hover:shadow-md hover:border-vastu-gold/30 transition-all group">
                                 <div className="flex items-center gap-4">
                                     <div className="w-[52px] h-[52px] rounded-xl bg-sky-50 flex items-center justify-center group-hover:bg-sky-100 transition-colors shrink-0">
@@ -311,7 +380,8 @@ export default function WelcomePage() {
                             </div>
                         </Link>
 
-                        <a href={settings?.vastu_map_link || "https://www.vastusphere.net"} target="_blank" rel="noopener noreferrer"
+                        {externalToolUrl !== '' && (
+                        <a href={externalToolUrl} target="_blank" rel="noopener noreferrer"
                             className="block bg-vastu-dark grain-overlay rounded-2xl shadow-lg shadow-vastu-dark/15 p-5 hover:shadow-xl transition-all group text-white relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-40 h-40 bg-vastu-gold opacity-10 rounded-full blur-[60px] translate-x-1/3 -translate-y-1/3" />
                             <div className="flex items-center gap-4 relative z-10">
@@ -319,12 +389,13 @@ export default function WelcomePage() {
                                     <Map className="text-vastu-gold" size={26} />
                                 </div>
                                 <div className="flex-1">
-                                    <h4 className="font-serif text-lg text-vastu-gold">Vastu Karte erstellen</h4>
-                                    <p className="text-white/50 font-body text-sm">Erstelle deine persönliche Vastu Karte</p>
+                                    <h4 className="font-serif text-lg text-vastu-gold">{externalToolLabel}</h4>
+                                    <p className="text-white/50 font-body text-sm">In neuem Tab öffnen</p>
                                 </div>
                                 <ExternalLink className="text-vastu-gold/50 group-hover:text-vastu-gold transition-colors" size={20} />
                             </div>
                         </a>
+                        )}
                     </div>
                 </div>
 
@@ -348,15 +419,33 @@ export default function WelcomePage() {
                     ))}
                 </div>
 
+                {/* Useful links — per-cohort list */}
+                {usefulLinks.length > 0 && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 p-6 md:p-8">
+                        <h3 className="font-serif text-xl text-vastu-dark mb-4 flex items-center gap-2">
+                            <ExternalLink className="text-vastu-gold" size={20} />
+                            Nützliche Links
+                        </h3>
+                        <div className="grid sm:grid-cols-2 gap-3">
+                            {usefulLinks.map((link, i) => (
+                                <a key={i} href={link.url} target="_blank" rel="noreferrer"
+                                    className="block bg-vastu-cream/60 rounded-xl px-4 py-3 hover:bg-vastu-cream transition-colors border border-vastu-sand/30">
+                                    <span className="font-serif text-vastu-dark">{link.label}</span>
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Instructional Videos */}
                 <div className="bg-white rounded-2xl shadow-sm border border-vastu-sand/50 p-6 md:p-8">
                     <h3 className="font-serif text-xl text-vastu-dark mb-4">📋 Hilfreiche Anleitungen</h3>
                     <div className="grid md:grid-cols-1 gap-4">
                         <a
-                            href={settings?.instruction_url || '#'}
+                            href={globalInstructionUrl || '#'}
                             target="_blank"
                             rel="noreferrer"
-                            className={`bg-vastu-cream rounded-xl p-5 border border-vastu-sand/30 accent-bar-left group transition-all ${settings?.instruction_url
+                            className={`bg-vastu-cream rounded-xl p-5 border border-vastu-sand/30 accent-bar-left group transition-all ${globalInstructionUrl
                                     ? 'hover:border-vastu-gold/40 hover:shadow-md cursor-pointer'
                                     : 'opacity-60 pointer-events-none'
                                 }`}
@@ -381,6 +470,13 @@ export default function WelcomePage() {
                     </div>
                     <p className="text-xs font-sans text-vastu-text-light mt-2">{completedLessons} von {totalLessons} Lektionen abgeschlossen</p>
                 </div>
+
+                {/* Signature — per-cohort */}
+                {courseSettings?.welcome_signature?.trim() && (
+                    <div className="text-center text-vastu-text-light font-script text-2xl">
+                        — {courseSettings.welcome_signature}
+                    </div>
+                )}
             </section>
 
             {/* Footer */}

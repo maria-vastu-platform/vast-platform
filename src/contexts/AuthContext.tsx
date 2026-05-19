@@ -3,6 +3,23 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { UserRole } from '../lib/types';
 
+const PENDING_INVITE_KEY = 'vastu.pendingInvite';
+
+// Email-confirmation flow: RegisterPage stashes the invite token, and the
+// entitlement gets created here on the next SIGNED_IN once the user is
+// authenticated (redeem_invite needs auth.uid()).
+async function tryRedeemPendingInvite() {
+    if (typeof localStorage === 'undefined') return;
+    const token = localStorage.getItem(PENDING_INVITE_KEY);
+    if (!token) return;
+    const { error } = await supabase.rpc('redeem_invite', { invite_token: token });
+    if (!error) {
+        localStorage.removeItem(PENDING_INVITE_KEY);
+    } else {
+        console.warn('Pending invite redemption failed:', error.message);
+    }
+}
+
 interface AuthContextType {
     user: User | null;
     session: Session | null;
@@ -77,6 +94,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (session?.user) {
                 setUser(session.user);
                 fetchUserRole(session.user.id);
+                if (_event === 'SIGNED_IN') {
+                    tryRedeemPendingInvite();
+                }
             } else {
                 setUser(null);
                 setRole(null);

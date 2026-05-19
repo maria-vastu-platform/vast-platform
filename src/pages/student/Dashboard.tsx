@@ -50,6 +50,23 @@ export default function StudentDashboard() {
         return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-vastu-gold" size={40} /></div>;
     }
 
+    // No content for this cohort yet (fresh Kohorte, or student has no entitlement
+    // so useModules returned []). Without this the redirect useEffect never fires
+    // and activeMod stays undefined → infinite spinner.
+    if (modules.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-24 text-center px-4">
+                <div className="w-16 h-16 rounded-full bg-vastu-cream flex items-center justify-center mb-5">
+                    <FileText className="text-vastu-dark/50" size={28} />
+                </div>
+                <h2 className="font-serif text-2xl text-vastu-dark mb-2">Noch keine Module verfügbar</h2>
+                <p className="text-vastu-text-light font-body max-w-md">
+                    Für deine Kohorte wurden noch keine Inhalte freigeschaltet. Sobald deine Mentorin die Module hinzufügt, erscheinen sie hier automatisch.
+                </p>
+            </div>
+        );
+    }
+
     const activeMod = modules.find(m => m.id === activeModuleId);
     if (!activeMod) {
         // Module not yet selected or invalid — useEffect will redirect shortly
