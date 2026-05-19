@@ -217,14 +217,12 @@ export default function WelcomePage() {
                             <Calendar className="text-vastu-gold" size={20} />
                             Unsere Treffen
                         </h3>
-                        <p className="text-vastu-text-light font-body text-sm mb-5">
-                            {calendarEvents.length > 0
-                                ? 'Termine für deine Kohorte'
-                                : 'Mittwochs um 9 Uhr [inkl. Aufzeichnung]'}
-                        </p>
-
-                        {calendarEvents.length > 0 ? (
-                            <div className="relative pl-6 space-y-1">
+                        {calendarEvents.length === 0 ? (
+                            <p className="text-vastu-text-light font-body text-sm italic mt-2">
+                                Termine erscheinen hier, sobald deine Mentorin sie für deine Kohorte eingetragen hat.
+                            </p>
+                        ) : (
+                            <div className="relative pl-6 space-y-1 mt-4">
                                 <div className="absolute left-[9px] top-2 bottom-2 w-px bg-vastu-sand" />
                                 {calendarEvents.map((ev, i) => (
                                     <div key={i} className="relative py-2">
@@ -246,88 +244,6 @@ export default function WelcomePage() {
                                     </div>
                                 ))}
                             </div>
-                        ) : (
-                        <div className="relative pl-6 space-y-1">
-                            <div className="absolute left-[9px] top-2 bottom-2 w-px bg-vastu-sand" />
-                            {[
-                                {
-                                    label: 'Modul 1: Vastu Karte, Elemente, Reinigung & Energien',
-                                    date: '20.03',
-                                    note: 'Ausnahme: Freitag',
-                                    active: true,
-                                    topics: ['1.1 Vastu Karte & Elemente', '1.2 Energetische Reinigung', '1.3 Experimente mit den Elementen', '1.4 Innere & Äußere Energien'],
-                                },
-                                {
-                                    label: 'Modul 2: Planeten, Charaktere, Sektoren, Yantren',
-                                    date: '25.03',
-                                    topics: ['2.1 Planeten, Charaktere, Sektoren, Yantren'],
-                                },
-                                {
-                                    label: 'Modul 3: Räume im Detail',
-                                    date: '01.04',
-                                    topics: ['3.1 Schlafzimmer, Arbeitszimmer, Küche & andere Zimmer', '3.2 Toilette & Badezimmer'],
-                                },
-                                {
-                                    label: 'Modul 4: Eingangstür, Berufung & Spiegel',
-                                    date: '08.04',
-                                    topics: ['4.1 Eingangstür & Berufung', '4.2 Spiegel'],
-                                },
-                                {
-                                    label: 'Modul 5: Vastu Design',
-                                    date: '15.04',
-                                    topics: ['5.1 Vastu Design für jeden Sektor & alle Räume'],
-                                },
-                                {
-                                    label: 'Modul 6: Vastu Coaching',
-                                    date: '22.04',
-                                },
-                                {
-                                    label: 'Modul 7: Bilder & spezielle Korrekturen',
-                                    date: '29.04',
-                                },
-                            ].map((item, i) => (
-                                <div key={i} className="relative py-2">
-                                    <div className="flex items-start gap-3">
-                                        <div className={`absolute left-[-15px] top-[11px] w-[7px] h-[7px] rounded-full ${item.active ? 'bg-vastu-gold ring-4 ring-vastu-gold/20' : 'bg-vastu-sand'}`} />
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <span className="font-sans text-sm font-medium text-vastu-dark">{item.label}</span>
-                                                <span className="text-vastu-text-light font-sans text-xs ml-auto shrink-0">{item.date}</span>
-                                            </div>
-                                            {item.note && (
-                                                <span className="text-xs font-sans text-vastu-gold italic">{item.note}</span>
-                                            )}
-                                            {item.topics && (
-                                                <ul className="mt-1.5 space-y-0.5">
-                                                    {item.topics.map((t, j) => (
-                                                        <li key={j} className="text-xs font-body text-vastu-text-light pl-2 border-l border-vastu-sand/50">{t}</li>
-                                                    ))}
-                                                </ul>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-
-                            {/* Bonus */}
-                            <div className="relative py-2 mt-1 border-t border-vastu-sand/50 pt-3">
-                                <div className={`absolute left-[-15px] top-[17px] w-[7px] h-[7px] rounded-full bg-vastu-sand`} />
-                                <span className="font-sans text-sm font-medium text-vastu-dark">Bonus</span>
-                                <ul className="mt-1.5 space-y-0.5">
-                                    <li className="text-xs font-body text-vastu-text-light pl-2 border-l border-vastu-sand/50">Grundstück nach Vastu</li>
-                                    <li className="text-xs font-body text-vastu-text-light pl-2 border-l border-vastu-sand/50">Haustiere</li>
-                                    <li className="text-xs font-body text-vastu-text-light pl-2 border-l border-vastu-sand/50">Umzug</li>
-                                    <li className="text-xs font-body text-vastu-text-light pl-2 border-l border-vastu-sand/50">Pflanzen</li>
-                                </ul>
-                            </div>
-
-                            {/* Abschlussball */}
-                            <div className="relative flex items-center gap-4 py-2 mt-2 border-t border-vastu-sand/50 pt-3">
-                                <div className="absolute left-[-15px] w-[7px] h-[7px] rounded-full bg-vastu-gold ring-4 ring-vastu-gold/15" />
-                                <span className="font-serif text-sm font-medium text-vastu-dark">✨ Abschlussball</span>
-                                <span className="text-vastu-dark font-sans text-xs font-semibold ml-auto">21.06</span>
-                            </div>
-                        </div>
                         )}
                     </div>
 
