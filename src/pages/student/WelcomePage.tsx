@@ -13,13 +13,12 @@ import { CalendarEvent, CourseSettings, UsefulLink } from '../../lib/types';
 function formatEventDate(iso: string): string {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return iso;
-    return d.toLocaleString('de-DE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
+    // Vastu's original schedule showed only day.month (e.g. "20.03") —
+    // no year, no time. Keep that exact format; the stored datetime's
+    // year/time are not displayed.
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    return `${dd}.${mm}`;
 }
 
 export default function WelcomePage() {
