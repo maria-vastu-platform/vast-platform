@@ -39,9 +39,11 @@ export default function Students() {
         setError('');
         try {
             // 1. Get every student profile.
+            // Vastu's profiles table uses `name` (not astrology's `full_name`);
+            // alias it so the rest of this component stays unchanged.
             const { data: profileData, error: profErr } = await supabase
                 .from('profiles')
-                .select('id, email, full_name, created_at')
+                .select('id, email, full_name:name, created_at')
                 .eq('role', 'student');
             if (profErr) throw profErr;
             const profiles = (profileData ?? []) as ProfileRow[];
