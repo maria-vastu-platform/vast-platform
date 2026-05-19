@@ -1,30 +1,44 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import LoginPage from './pages/LoginPage';
-import StudentLayout from './components/layout/StudentLayout';
-import StudentDashboard from './pages/student/Dashboard';
-import WelcomePage from './pages/student/WelcomePage';
-import LektionView from './pages/student/LektionView';
-import QuizView from './pages/student/QuizView';
-import Library from './pages/student/Library';
-import Profile from './pages/student/Profile';
-import InstallGuide from './pages/student/InstallGuide';
-import FeedbackPage from './pages/student/Feedback';
-
-import TeacherLayout from './components/layout/TeacherLayout';
-import CourseEditor from './pages/teacher/CourseEditor';
-import Students from './pages/teacher/Students';
-import ManageLibrary from './pages/teacher/ManageLibrary';
-import ManageKohorten from './pages/teacher/ManageKohorten';
-import WelcomeEditor from './pages/teacher/WelcomeEditor';
-import SettingsPage from './pages/teacher/SettingsPage';
-import QuizResults from './pages/teacher/QuizResults';
-import TeacherFeedback from './pages/teacher/Feedback';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { CourseProvider } from './contexts/CourseContext';
-import RegisterPage from './pages/RegisterPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import UpdatePasswordPage from './pages/UpdatePasswordPage';
+
+// Route-level code splitting: each page is its own chunk and only
+// downloads when the user navigates to it. The login screen no longer
+// ships the entire teacher + student app.
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const UpdatePasswordPage = lazy(() => import('./pages/UpdatePasswordPage'));
+
+const StudentLayout = lazy(() => import('./components/layout/StudentLayout'));
+const StudentDashboard = lazy(() => import('./pages/student/Dashboard'));
+const WelcomePage = lazy(() => import('./pages/student/WelcomePage'));
+const LektionView = lazy(() => import('./pages/student/LektionView'));
+const QuizView = lazy(() => import('./pages/student/QuizView'));
+const Library = lazy(() => import('./pages/student/Library'));
+const Profile = lazy(() => import('./pages/student/Profile'));
+const InstallGuide = lazy(() => import('./pages/student/InstallGuide'));
+const FeedbackPage = lazy(() => import('./pages/student/Feedback'));
+
+const TeacherLayout = lazy(() => import('./components/layout/TeacherLayout'));
+const CourseEditor = lazy(() => import('./pages/teacher/CourseEditor'));
+const Students = lazy(() => import('./pages/teacher/Students'));
+const ManageLibrary = lazy(() => import('./pages/teacher/ManageLibrary'));
+const ManageKohorten = lazy(() => import('./pages/teacher/ManageKohorten'));
+const WelcomeEditor = lazy(() => import('./pages/teacher/WelcomeEditor'));
+const SettingsPage = lazy(() => import('./pages/teacher/SettingsPage'));
+const QuizResults = lazy(() => import('./pages/teacher/QuizResults'));
+const TeacherFeedback = lazy(() => import('./pages/teacher/Feedback'));
+
+function RouteFallback() {
+    return (
+        <div className="min-h-screen bg-vastu-dark-deep flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full border-2 border-vastu-gold/30 border-t-vastu-gold animate-spin" />
+        </div>
+    );
+}
 
 function App() {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -57,6 +71,7 @@ function App() {
         <AuthProvider>
             <CourseProvider>
             <Router>
+                <Suspense fallback={<RouteFallback />}>
                 <Routes>
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
@@ -93,6 +108,7 @@ function App() {
                     {/* Default redirect */}
                     <Route path="/" element={<Navigate to="/login" replace />} />
                 </Routes>
+                </Suspense>
             </Router>
             </CourseProvider>
         </AuthProvider>
