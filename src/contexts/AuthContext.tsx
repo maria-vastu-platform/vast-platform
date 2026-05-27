@@ -6,30 +6,54 @@ import { UserRole } from '../lib/types';
 const PENDING_INVITE_KEY = 'vastu.pendingInvite';
 const ROLE_CACHE_KEY = 'vastu.cachedRole';
 
-// Cache the resolved role so repeat visits flip `loading` to false instantly,
-// without waiting for the profile-fetch network round-trip. The cache is
-// keyed by user id so a session swap can't show the wrong role. Always
-// refreshed from the network in the background.
-function readCachedRole(userId: string): UserRole | null {
+// Cache the resolved identity so repeat visits skip BOTH the profile-fetch
+// round-trip AND the LoginPage flash before the redirect kicks in.
+interface CachedAuth {
+    userId: string;
+    role: UserRole;
+    email?: string;
+    name?: string;
+}
+
+function readCachedAuth(): CachedAuth | null {
     if (typeof localStorage === 'undefined') return null;
     try {
         const raw = localStorage.getItem(ROLE_CACHE_KEY);
         if (!raw) return null;
         const parsed = JSON.parse(raw);
-        return parsed.userId === userId && (parsed.role === 'student' || parsed.role === 'teacher')
-            ? parsed.role
-            : null;
+        if (!parsed?.userId) return null;
+        if (parsed.role !== 'student' && parsed.role !== 'teacher') return null;
+        return parsed as CachedAuth;
     } catch { return null; }
 }
 
-function writeCachedRole(userId: string, role: UserRole) {
+function writeCachedAuth(user: User, role: UserRole) {
     if (typeof localStorage === 'undefined') return;
-    try { localStorage.setItem(ROLE_CACHE_KEY, JSON.stringify({ userId, role })); } catch { }
+    try {
+        const payload: CachedAuth = {
+            userId: user.id,
+            role,
+            email: user.email,
+            name: (user.user_metadata as { full_name?: string } | undefined)?.full_name,
+        };
+        localStorage.setItem(ROLE_CACHE_KEY, JSON.stringify(payload));
+    } catch { }
 }
 
-function clearCachedRole() {
+function clearCachedAuth() {
     if (typeof localStorage === 'undefined') return;
     try { localStorage.removeItem(ROLE_CACHE_KEY); } catch { }
+}
+
+function optimisticUserFromCache(cached: CachedAuth): User {
+    return {
+        id: cached.userId,
+        email: cached.email || '',
+        user_metadata: { full_name: cached.name || '' },
+        app_metadata: {},
+        aud: 'authenticated',
+        created_at: '',
+    } as User;
 }
 
 // Email-confirmation flow: RegisterPage stashes the invite token, and the
@@ -70,10 +94,13 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
+    // Pre-hydrate from cache so the first render already knows who the user
+    // is (no LoginPage flash before the redirect, no protected-layout spinner).
+    const initialCache = typeof window !== 'undefined' ? readCachedAuth() : null;
+    const [user, setUser] = useState<User | null>(initialCache ? optimisticUserFromCache(initialCache) : null);
     const [session, setSession] = useState<Session | null>(null);
-    const [role, setRole] = useState<UserRole | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [role, setRole] = useState<UserRole | null>(initialCache ? initialCache.role : null);
+    const [loading, setLoading] = useState(initialCache ? false : true);
 
     const isPlaceholder = !import.meta.env.VITE_SUPABASE_URL ||
         import.meta.env.VITE_SUPABASE_URL.includes('placeholder') ||
@@ -107,17 +134,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
             if (session?.user) {
+                // Replace the optimistic user object with the real one from
+                // the verified session, then refresh role in background.
                 setUser(session.user);
-                // Optimistic: if we cached this user's role on a previous
-                // visit, flip loading=false NOW so the UI is interactive
-                // immediately. fetchUserRole below refreshes in background.
-                const cached = readCachedRole(session.user.id);
-                if (cached) {
-                    setRole(cached);
-                    setLoading(false);
-                }
                 fetchUserRole(session.user.id);
             } else {
+                // Cache was stale (no real session) — clear optimistic state.
+                clearCachedAuth();
+                setUser(null);
+                setRole(null);
                 setLoading(false);
             }
         });
@@ -128,19 +153,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSession(session);
             if (session?.user) {
                 setUser(session.user);
-                const cached = readCachedRole(session.user.id);
-                if (cached) {
-                    setRole(cached);
-                    setLoading(false);
-                }
                 fetchUserRole(session.user.id);
                 if (_event === 'SIGNED_IN') {
                     tryRedeemPendingInvite();
                 }
             } else {
+                clearCachedAuth();
                 setUser(null);
                 setRole(null);
-                clearCachedRole();
                 setLoading(false);
             }
         });
@@ -176,10 +196,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } else {
                 const fetchedRole = data?.role as UserRole || 'student';
                 setRole(fetchedRole);
-                writeCachedRole(userId, fetchedRole);
                 if (user) {
                     const updatedUser = { ...user, user_metadata: { ...user.user_metadata, ...data } };
                     setUser(updatedUser);
+                    writeCachedAuth(updatedUser, fetchedRole);
+                } else {
+                    writeCachedAuth({ id: userId } as User, fetchedRole);
                 }
             }
         } catch (err) {
@@ -194,7 +216,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!isPlaceholder) {
             await supabase.auth.signOut();
         }
-        clearCachedRole();
+        clearCachedAuth();
         setRole(null);
         setUser(null);
         setSession(null);
