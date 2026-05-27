@@ -4,10 +4,13 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext';
 import { CourseProvider } from './contexts/CourseContext';
 
-// Route-level code splitting: each page is its own chunk and only
-// downloads when the user navigates to it. The login screen no longer
-// ships the entire teacher + student app.
-const LoginPage = lazy(() => import('./pages/LoginPage'));
+// Eager: LoginPage is the very first route a fresh visitor lands on, so
+// lazy would add a needless Suspense round-trip on the critical path.
+import LoginPage from './pages/LoginPage';
+
+// Route-level code splitting for every other page: each is its own chunk
+// and only downloads when navigated to. The login screen no longer ships
+// the entire teacher + student app.
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const UpdatePasswordPage = lazy(() => import('./pages/UpdatePasswordPage'));
