@@ -21,7 +21,7 @@ function formatEventDate(iso: string): string {
 
 export default function WelcomePage() {
     const { user, signOut, loading, role, isDemo } = useAuth();
-    const { activeCourseId, courses, loading: coursesLoading } = useCourseContext();
+    const { activeCourseId, courses, loading: coursesLoading, error: coursesError } = useCourseContext();
     const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Teilnehmer';
     const { modules } = useModules();
 
@@ -100,8 +100,9 @@ export default function WelcomePage() {
     }
 
     // Student with no course access (e.g. access revoked, or not yet granted).
-    // Show a clear message instead of an empty/broken welcome screen.
-    if (!isDemo && role === 'student' && !coursesLoading && courses.length === 0) {
+    // Only when the load finished cleanly with zero courses — never on a load
+    // error (degrade to the normal page instead of a hard "no access" wall).
+    if (!isDemo && role === 'student' && !coursesLoading && !coursesError && courses.length === 0) {
         return (
             <div className="min-h-screen bg-vastu-light flex items-center justify-center p-6">
                 <div className="bg-white rounded-2xl border border-vastu-sand/50 shadow-sm p-10 max-w-lg w-full text-center">
