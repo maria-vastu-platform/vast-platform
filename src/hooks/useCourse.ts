@@ -71,7 +71,16 @@ export function useModules() {
                         availableFrom: w.available_from,
                         lektionen: w.days
                             .filter((d: any) => d.is_visible !== false)
-                            .sort((a: any, b: any) => a.order_index - b.order_index)
+                            // Stable order: by order_index, then by creation time,
+                            // then by id. Several lessons share order_index = 99
+                            // (added without an explicit position); sorting on
+                            // order_index alone left their order non-deterministic,
+                            // so the list reshuffled on every load ("porjadok
+                            // sbivaetsja"). The created_at/id tiebreakers pin it.
+                            .sort((a: any, b: any) =>
+                                ((a.order_index ?? 0) - (b.order_index ?? 0)) ||
+                                (Date.parse(a.created_at || 0) - Date.parse(b.created_at || 0)) ||
+                                String(a.id).localeCompare(String(b.id)))
                             .map((d: any) => ({
                                 id: d.id,
                                 title: d.title,
