@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // Replace the optimistic user object with the real one from
                 // the verified session, then refresh role in background.
                 setUser(session.user);
-                fetchUserRole(session.user.id);
+                fetchUserRole(session.user);
             } else {
                 // Cache was stale (no real session) — clear optimistic state.
                 clearCachedAuth();
@@ -164,7 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSession(session);
             if (session?.user) {
                 setUser(session.user);
-                fetchUserRole(session.user.id);
+                fetchUserRole(session.user);
                 if (_event === 'SIGNED_IN') {
                     tryRedeemPendingInvite();
                 }
@@ -193,7 +193,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRole(newRole);
     };
 
-    const fetchUserRole = async (userId: string) => {
+    const fetchUserRole = async (authUser: User) => {
+        const userId = authUser.id;
         try {
             const { data, error } = await supabase
                 .from('profiles')
@@ -204,20 +205,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (error) {
                 console.warn('Profile fetch error, defaulting to student:', error.message);
                 setRole('student');
+                writeCachedAuth(authUser, 'student');
             } else {
                 const fetchedRole = data?.role as UserRole || 'student';
                 setRole(fetchedRole);
-                if (user) {
-                    const updatedUser = { ...user, user_metadata: { ...user.user_metadata, ...data } };
-                    setUser(updatedUser);
-                    writeCachedAuth(updatedUser, fetchedRole);
-                } else {
-                    writeCachedAuth({ id: userId } as User, fetchedRole);
-                }
+                // Always merge the profile onto the AUTHORITATIVE session user
+                // passed in — never a stale closure `user`. The old code spread
+                // the closure `user`, which on a repeat visit is the optimistic
+                // object rebuilt from a previously-cached account. That reverted
+                // user.id to the wrong account, so CourseContext queried the
+                // wrong user's entitlements (zero rows) and locked an entitled
+                // student out with "Kein Kurszugang".
+                const updatedUser = { ...authUser, user_metadata: { ...authUser.user_metadata, ...data } };
+                setUser(updatedUser);
+                writeCachedAuth(updatedUser, fetchedRole);
             }
         } catch (err) {
             console.error(err);
             setRole('student');
+            writeCachedAuth(authUser, 'student');
         } finally {
             setLoading(false);
         }
